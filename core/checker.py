@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pymupdf
 from pypdf import PdfReader
+from pypdf.errors import PyPdfError
 
 from core.checks import (
     check_language,
@@ -33,6 +34,15 @@ def screen_pdf(
         resolved_name = filename or path.name
         doc_mu = pymupdf.open(str(path))
         reader_py = PdfReader(str(path))
+
+    # Authenticate/decrypt documents with standard empty/permissions passwords
+    if getattr(doc_mu, "needs_pass", False):
+        doc_mu.authenticate("")
+    if getattr(reader_py, "is_encrypted", False):
+        try:
+            reader_py.decrypt("")
+        except (PyPdfError, ValueError, AttributeError):
+            pass
 
     findings: list[Finding] = []
     finding_counter = 1

@@ -55,28 +55,28 @@ All screening findings and scan payloads adhere to strongly-typed dataclasses de
 ```mermaid
 classDiagram
     class Finding {
-        +str rule_id
-        +str check_name
-        +str status
-        +int page
-        +str details
-        +str remediation
-        +to_dict() dict
+        str rule_id
+        str check_name
+        str status
+        int page
+        str details
+        str remediation
+        to_dict() dict
     }
     class ScanSummary {
-        +int total_pages
-        +int checks_performed
-        +int passed
-        +int issues
-        +int needs_human_review
-        +int could_not_evaluate
-        +to_dict() dict
+        int total_pages
+        int checks_performed
+        int passed
+        int issues
+        int needs_human_review
+        int could_not_evaluate
+        to_dict() dict
     }
     class ScanResult {
-        +str filename
-        +ScanSummary summary
-        +List~Finding~ findings
-        +to_dict() dict
+        str filename
+        ScanSummary summary
+        List~Finding~ findings
+        to_dict() dict
     }
     ScanResult *-- ScanSummary
     ScanResult *-- Finding
@@ -93,7 +93,7 @@ Every screening evaluation yields exactly one of four normalized statuses:
 
 ## 3. REST API Specifications
 
-The web tier ([`web/app.py`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/web/app.py)) exposes an asynchronous REST API:
+The web interface ([`web/app.py`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/web/app.py)) exposes an asynchronous REST API:
 
 | Method | Endpoint | Description | Request Payload | Response Status & Body |
 |---|---|---|---|---|
@@ -136,7 +136,7 @@ flowchart LR
 ### Google Cloud Run Service Spec:
 - **Image**: Multi-stage Linux container based on `python:3.13-slim` managed via `Dockerfile`.
 - **Runtime Resources**: `512 MiB` RAM, `1 vCPU`.
-- **Concurrency**: Scale-to-zero enabled (`min-instances = 0`, `max-instances = 3`).
+- **Concurrency**: Scale-to-zero enabled (`min-instances = 0`, `max-instances = 2`).
 - **Entrypoint**: `uvicorn web.app:app --host 0.0.0.0 --port ${PORT:-8080}` with `exec` signal forwarding for instant `SIGINT`/`SIGTERM` container termination.
 
 ### Cloudflare Edge Configuration:

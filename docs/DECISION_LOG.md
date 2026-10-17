@@ -11,7 +11,7 @@
 - **Context**: The project was originally conceived with dual requirements covering both webpage accessibility and document accessibility (REQ-01, REQ-02). However, digital PDF accessibility carries unique structural requirements (ISO 32000-1 tagged PDF trees, XObject raster models, embedded metadata dictionaries) that differ fundamentally from HTML DOM tree parsing. Attempting to support both within a prototype timeline risked superficial coverage across both media.
 - **Decision**: Explicitly descope web URL and HTML scanning. Dedicate 100% of engineering effort toward building an accurate, extensible, and high-performance PDF screening engine.
 - **Consequences**:
-  - Web URL scanning is logged in [`docs/ROADMAP.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/ROADMAP.md) for post-prototype exploration.
+  - Web URL scanning is scheduled as Milestone 5 in [`docs/ROADMAP.md`](ROADMAP.md) (potentially as part of the prototype if time permits).
   - Project interfaces (CLI, REST API, Web UI) are streamlined around file upload and byte-stream ingestion.
 
 ---
@@ -24,7 +24,7 @@
   1. High-speed content extraction (digital character layers, raster image extraction, page enumeration).
   2. Direct inspection of internal low-level PDF document catalog dictionaries (`/StructTreeRoot`, `/Lang`, `/ViewerPreferences`).
   Python libraries typically excel at one but struggle with the other. Pure-Python `pypdf` excels at parsing low-level object dictionaries, while C-backed `pymupdf` (MuPDF) is orders of magnitude faster at text extraction and image resource indexing.
-- **Decision**: Implement a coordinated dual-engine model in [`core/checker.py`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/core/checker.py):
+- **Decision**: Implement a coordinated dual-engine model in [`core/checker.py`](../core/checker.py):
   - Use `pypdf.PdfReader` for catalog dictionary inspection (`check_language`, `check_structure`, catalog title fallbacks).
   - Use `pymupdf.open()` for page-level text extraction (`check_page_text`) and image resource enumeration (`check_page_images`).
 - **Consequences**:
@@ -38,12 +38,12 @@
 
 - **Date**: 2026-10-17
 - **Status**: Accepted
-- **Context**: The web screening service required deployment to an accessible public endpoint on a zero-budget free tier while supporting Python 3.13, C-extensions (`pymupdf`), ephemeral container scaling, and SSL security. A formal multi-vendor comparison evaluated Oracle Cloud VPS, AWS Lambda, Render, and Google Cloud Run (documented in [`docs/CLOUD_HOSTING_COMPARISON.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/CLOUD_HOSTING_COMPARISON.md)).
+- **Context**: The web screening service required deployment to an accessible public endpoint on a zero-budget free tier while supporting Python 3.13, C-extensions (`pymupdf`), ephemeral container scaling, and SSL security. A formal multi-vendor comparison evaluated Oracle Cloud VPS, AWS Lambda, Render, and Google Cloud Run (documented in [`docs/CLOUD_HOSTING_COMPARISON.md`](CLOUD_HOSTING_COMPARISON.md)).
 - **Decision**: Select **Google Cloud Run (Fully Managed)** paired with **Cloudflare Edge Proxy (Free Tier)**.
   - *Cloud Run*: Scale-to-zero container runtime (512 MiB RAM, 1 vCPU, 2M free requests/month, 360,000 vCPU-seconds free/month). Zero idle cost and zero server maintenance.
   - *Cloudflare*: Universal SSL Full (Strict), custom DNS proxying, automated HTTPS redirection, edge asset caching (`/static/*`), and zero-cost egress protection.
 - **Consequences**:
-  - Containerization via standard [`Dockerfile`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/Dockerfile) ensures local/cloud runtime parity.
+  - Containerization via standard [`Dockerfile`](../Dockerfile) ensures local/cloud runtime parity.
   - Cold starts take 2–4 seconds after idling; mitigated by Cloudflare edge caching for static assets.
   - Cloudflare Full (Strict) mode requires Cloud Run to provision Google-managed origin certificates before proxy activation.
 

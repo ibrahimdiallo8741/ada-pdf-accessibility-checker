@@ -1,7 +1,7 @@
 # AI Agent Directives — ADA PDF Accessibility Checker
 
 ## 1. Mission & Scope
-- **Domain**: PDF files only (webpage and URL scanning is explicitly descoped).
+- **Domain**: PDF files currently (webpage and URL scanning scheduled for Milestone 5 if prototype schedule allows).
 - **Tool Nature**: Preliminary screening prototype, **not** an official ADA Title II or WCAG compliance certification engine.
 - **Privacy Invariant**: Strictly in-memory processing. User PDFs must stream through memory buffers (`io.BytesIO`) and never be written to disk, `/tmp`, or exfiltrated to external services (REQ-16, REQ-17).
 
@@ -28,7 +28,8 @@
 4. **Documentation Synchronization**: When code, architecture, or roadmap items change, immediately update the corresponding docs in `docs/` and references in `README.md`.
 
 ## 5. Verification Commands & Definition of Done
-Work is complete only when:
+- **Documentation-Only Changes**: Running verification commands is **not required** when changes are strictly confined to markdown documentation (`docs/`, `*.md`).
+- **Code & Configuration Changes**: Work is complete only when:
 ```bash
 uv run python -m tests.runner     # Must pass 10/10 acceptance tests
 uv run python pdf_checker.py      # CLI execution remains functional

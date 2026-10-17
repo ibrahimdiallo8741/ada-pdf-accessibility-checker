@@ -48,8 +48,8 @@ python -m pip install -r requirements.txt
 
 ## Running the Application
 
-### 1. Web Portal & REST API
-Launch local FastAPI server at `http://localhost:8000`:
+### 1. Web Portal and API
+Launch local server at `http://localhost:8000`:
 ```bash
 # With uv:
 uv run uvicorn web.app:app --reload
@@ -61,7 +61,7 @@ uvicorn web.app:app --reload
 - **Interactive OpenAPI Docs:** [`http://localhost:8000/docs`](http://localhost:8000/docs) — Swagger UI.
 
 ### 2. Command-Line Interface (CLI)
-Interactive terminal scanner generating `<filename>_accessibility_report.json`:
+Interactive terminal program to generate `<filename>_accessibility_report.json`:
 ```bash
 # With uv:
 uv run python pdf_checker.py
@@ -74,7 +74,7 @@ python pdf_checker.py
 
 ## Running Tests
 
-Execute the automated acceptance test runner against AC-01 through AC-18:
+Execute the automated test runner against all Acceptance Criteria:
 ```bash
 # With uv:
 uv run python -m tests.runner

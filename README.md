@@ -88,4 +88,5 @@ Detailed architecture, check specifications, and future roadmap in [`docs/`](doc
 - [`FUTURE_WORK.md`](docs/FUTURE_WORK.md): Descoping log (webpage scan) and future enhancements.
 - [`PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md): Original project background and handoff details.
 - [`WEB_HOSTING_AND_ARCHITECTURE_PLAN.md`](docs/WEB_HOSTING_AND_ARCHITECTURE_PLAN.md): Cloudflare and container hosting specifications.
+- [`CLOUD_HOSTING_COMPARISON.md`](docs/CLOUD_HOSTING_COMPARISON.md): Multi-vendor cloud hosting assessment and free-tier comparison.
 - [`AGENTS.md`](AGENTS.md): Contributor conventions and agent development principles.

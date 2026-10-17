@@ -61,22 +61,199 @@ sequenceDiagram
 
 ---
 
-## 3. Web Hosting & Infrastructure (<1,000 Requests Free Tier)
+## 3. Web Hosting & Infrastructure: Google Cloud Run + Cloudflare Edge
 
-### 3.1 Compute vs. Edge Boundary
-- **Engine Dependency:** `pymupdf` bundles native C MuPDF binaries. Cloudflare Workers Python environment uses Pyodide without C-extension support.
-- **Solution:** Host the FastAPI container on a container platform that scales to zero, using Cloudflare's free edge network as the frontend proxy.
+### 3.1 Compute vs. Edge Architecture
+- **Compute Host:** **Google Cloud Run (Free Tier)**. Fully managed serverless container runtime that scales to 0 instances when idle, completely eliminating idle server costs and VM maintenance.
+- **Resource Sizing:**
+  - **Memory:** `512 MiB` (optimal for 25 MB PDF stream + PyMuPDF C parsing allocations + ~150 MB safety margin).
+  - **CPU:** `1 vCPU`.
+  - **Scaling:** `min-instances: 0` (scales to zero when idle = $0 cost), `max-instances: 2`.
+  - **Concurrency:** `40` concurrent requests per container.
+  - **Monthly Free Tier Quota:** 2,000,000 requests, 360,000 GB-seconds (720,000 active seconds at 512 MB), 180,000 vCPU-seconds, and 1 GB outbound egress to North America.
+- **Edge Layer:** **Cloudflare Free Tier**. Manages DNS, SSL/TLS termination, edge caching, and DDoS protection. Crucially, Cloudflare's edge cache shields Cloud Run from exceeding its 1 GB monthly egress quota by caching static assets (`/static/*`) and repeated reports.
 
 ```mermaid
 flowchart LR
-    Browser["External Evaluators & Test Runners"] --> Cloudflare["Cloudflare Free Tier<br/>(DNS + SSL + WAF + Caching)"]
-    Cloudflare -->|CNAME Proxy| CloudRun["Google Cloud Run (or Render Free Tier)<br/>- 2,000,000 free req/mo<br/>- Scales to 0 instances (zero cost)<br/>- Fast 1-2s cold start"]
-    CloudRun --> FastAPI["FastAPI Service<br/>(web/app.py)"]
-    FastAPI --> Engine["Core Screening Engine<br/>(core/)"]
+    Browser["User / Evaluator Browser"] -->|HTTPS| CF["Cloudflare Edge (Free Tier)<br/>• DNS + Universal SSL (Strict)<br/>• DDoS & Bot Protection<br/>• Edge Caching (/static/*)"]
+    CF -->|CNAME Proxy| CloudRun["Google Cloud Run (Free Tier)<br/>• Scales to 0 instances ($0 idle)<br/>• 512 MB RAM / 1 vCPU<br/>• Up to 2M free requests/mo"]
+    CloudRun --> FastAPI["FastAPI Container<br/>(web/app.py:8080)"]
+    FastAPI --> Engine["Core Screening Engine<br/>(core/checker.py)"]
 ```
 
-### 3.2 Security & Data Protection (REQ-16, REQ-17)
-- **In-Memory Buffer Processing:** PDF files are streamed into Python memory buffers (`io.BytesIO`) and evaluated directly; no uploaded files are written to publicly accessible directories.
+---
+
+### 3.2 Docker Containerization Specification
+
+#### 1. Production `Dockerfile`
+Standard container build optimized for Google Cloud Run:
+```dockerfile
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Prevent Python from writing .pyc files and enable unbuffered output for Cloud Logging
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency definitions and install
+COPY pyproject.toml requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source code
+COPY core/ /app/core/
+COPY web/ /app/web/
+COPY pdf_checker.py /app/
+
+EXPOSE 8080
+
+CMD ["uvicorn", "web.app:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+#### 2. `.dockerignore`
+Prevents local virtual environments, test fixtures, and Git files from inflating the container image:
+```text
+.git/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+tests/fixtures/*.pdf
+!tests/fixtures/fixture_*.pdf
+*.json
+.pytest_cache/
+```
+
+#### 3. Local Container Verification
+```bash
+# Build image locally
+docker build -t ada-checker .
+
+# Run container locally
+docker run --rm -p 8080:8080 -e PORT=8080 ada-checker
+
+# Test endpoint
+curl http://localhost:8080/
+```
+
+---
+
+### 3.3 Google Cloud Run Deployment Steps
+
+#### Step 1: Install & Authenticate Google Cloud CLI
+- Install the Google Cloud SDK: [Google Cloud SDK Installation Guide](https://cloud.google.com/sdk/docs/install)
+- Authenticate and configure your project:
+  ```bash
+  gcloud auth login
+  gcloud config set project YOUR_GCP_PROJECT_ID
+  ```
+
+#### Step 2: Enable Required GCP APIs
+Enable Cloud Run and Artifact Registry (one-time setup):
+```bash
+gcloud services enable run.googleapis.com artifactregistry.googleapis.com
+```
+
+#### Step 3: Deploy Directly from Source
+Google Cloud Run builds the container automatically using Cloud Build:
+```bash
+gcloud run deploy ada-pdf-checker \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --port 8080 \
+  --memory 512Mi \
+  --cpu 1 \
+  --min-instances 0 \
+  --max-instances 2 \
+  --concurrency 40
+```
+Upon completion, Cloud Run outputs the default service URL:
+`https://ada-pdf-checker-[hash]-uc.a.run.app`
+
+---
+
+### 3.4 Cloudflare DNS & Edge Setup (Step-by-Step with Gotchas Solved)
+
+Connecting a custom domain (e.g., `checker.yourdomain.com`) through Cloudflare to Google Cloud Run involves specific DNS configurations. Follow these precise instructions to avoid common 525/526 SSL errors, redirect loops, and 404 Host header mismatches.
+
+#### Option A: Cloudflare CNAME to Cloud Run Domain Mapping (Standard)
+
+1. **Step 1: Register Custom Domain in Google Cloud Run**
+   ```bash
+   gcloud beta run domain-mappings create \
+     --service ada-pdf-checker \
+     --domain checker.yourdomain.com \
+     --region us-central1
+   ```
+   Cloud Run outputs required DNS records, typically:
+   - **Type:** `CNAME`
+   - **Record:** `ghs.googlehosted.com.`
+
+2. **Step 2: Initial Verification in Cloudflare (CRITICAL DNS-ONLY MODE)**
+   > **Warning (Gotcha 1 — Certificate Verification Failure):** When Google requests the initial SSL certificate, Google's Certificate Authority checks domain ownership via HTTP-01 or DNS. If Cloudflare Proxy is enabled immediately, Cloudflare intercepts the challenge and Google's certificate provisioning fails.
+   - In Cloudflare Dashboard → **DNS** → **Records**:
+     - **Type:** `CNAME`
+     - **Name:** `checker` (for `checker.yourdomain.com`)
+     - **Target:** `ghs.googlehosted.com`
+     - **Proxy status:** **DNS only (Grey Cloud)** ⚠️ *Keep Grey until Google verifies!*
+     - **TTL:** `Auto`
+
+3. **Step 3: Wait for Google Certificate Provisioning**
+   - Check status: `gcloud beta run domain-mappings describe --domain checker.yourdomain.com --region us-central1`
+   - Wait until Google reports `Certificate: True` / `Ready: True` (usually 10–20 minutes).
+
+4. **Step 4: Enable Cloudflare Proxy & Configure SSL (CRITICAL REDIRECT LOOP PREVENTION)**
+   > **Warning (Gotcha 2 — The "ERR_TOO_MANY_REDIRECTS" / 525 Error):** Cloud Run enforces HTTPS automatically. If Cloudflare's SSL/TLS mode is set to "Flexible", Cloudflare communicates with Cloud Run over unencrypted HTTP (port 80). Cloud Run replies with a 301 redirect to HTTPS. Cloudflare receives this and repeats the HTTP request, creating an infinite redirect loop.
+   - In Cloudflare Dashboard → **SSL/TLS**:
+     - Set encryption mode to **Full** or **Full (Strict)**. *(Never use Flexible).*
+   - In Cloudflare Dashboard → **DNS** → **Records**:
+     - Edit the `checker` CNAME record and switch Proxy status to **Proxied (Orange Cloud)**.
+
+---
+
+#### Option B: Cloudflare Origin Rules Direct Reverse Proxy (Advanced / Zero-Wait)
+*If you want to skip Google's Domain Mapping verification and route directly to the Cloud Run `.run.app` address:*
+
+> **Warning (Gotcha 3 — Cloud Run 404 on Direct CNAME):** If you create a CNAME directly pointing `checker.yourdomain.com` to `ada-pdf-checker-[hash]-uc.a.run.app`, Cloud Run returns `HTTP 404: Not Found`. This is because Cloud Run uses the HTTP `Host` header to route requests to container services, and by default Cloudflare passes the original `Host: checker.yourdomain.com`.
+
+**How to configure Cloudflare Origin Rule:**
+1. In Cloudflare Dashboard → **DNS** → **Records**:
+   - **Type:** `CNAME`
+   - **Name:** `checker`
+   - **Target:** `ada-pdf-checker-[hash]-uc.a.run.app`
+   - **Proxy status:** **Proxied (Orange Cloud)**
+2. In Cloudflare Dashboard → **Rules** → **Origin Rules**:
+   - Click **Create rule**:
+     - Rule name: `Route to Cloud Run Origin`
+     - Expression: `(http.host eq "checker.yourdomain.com")`
+     - **Host Header:** Select **Rewrite to...** and enter `ada-pdf-checker-[hash]-uc.a.run.app`
+     - **Server Name Indication (SNI):** Select **Override to...** and enter `ada-pdf-checker-[hash]-uc.a.run.app`
+3. In Cloudflare Dashboard → **SSL/TLS**:
+   - Set to **Full (Strict)**.
+   - Result: Traffic is routed directly to Cloud Run instantly with zero domain-mapping wait time.
+
+---
+
+#### Edge Caching Configuration (Protecting Free Tier Egress)
+Google Cloud Run free tier provides 1 GB of monthly egress. To protect against egress billing when users download large PDFs or test JSON reports:
+1. In Cloudflare Dashboard → **Caching** → **Cache Rules**:
+   - Click **Create rule**:
+     - Rule name: `Cache Static Assets`
+     - Expression: `starts_with(http.request.uri.path, "/static/")`
+     - Cache eligibility: **Eligible for cache**
+     - Edge TTL: **1 month**
+     - Browser TTL: **1 day**
+2. Results: CSS (`style.css`), JS (`app.js`), and favicon requests are served entirely from Cloudflare Edge without hitting Cloud Run container instances or counting against egress quotas.
+
+### 3.5 Security & Data Protection (REQ-16, REQ-17)
+- **In-Memory Buffer Processing:** PDF files are streamed into Python memory buffers (`io.BytesIO`) and evaluated directly; no uploaded files are written to container disk.
 - **Short-Lived Scan Store:** Scan results and in-memory references expire after 1 hour or upon request.
 - **Secret Isolation:** No API keys or credentials committed or output in accessibility reports.
 
@@ -188,10 +365,10 @@ Automated test runner verifying acceptance criteria:
 
 ```mermaid
 graph TD
-    P1["Phase 1: Core Domain Alignment<br/>Implement core/models.py and core/checks.py<br/>Refactor findings to match api/api.md schema"]
-    P2["Phase 2: Automated Test Runner<br/>Create tests/fixtures/ and tests/runner.py<br/>Implement AC-01–AC-18 automated test assertions"]
-    P3["Phase 3: Web Service Implementation<br/>Implement web/app.py & web/storage.py<br/>Mount /api/scans endpoints and web UI"]
-    P4["Phase 4: Containerization & Cloudflare Edge<br/>Add Dockerfile<br/>Deploy to Cloud Run / Render free tier fronted by Cloudflare"]
+    P1["Phase 1: Core Domain Alignment (Completed)<br/>Implemented core/models.py & core/checks.py"]
+    P2["Phase 2: Automated Test Runner (Completed)<br/>Created tests/fixtures/ & tests/runner.py (AC-01 to AC-18)"]
+    P3["Phase 3: Web Service Implementation (Completed)<br/>Implemented web/app.py, storage, & UI portal"]
+    P4["Phase 4: Containerization & Cloudflare Edge (Active)<br/>Dockerfile + Google Cloud Run + Cloudflare Edge"]
 
     P1 --> P2
     P2 --> P3
@@ -199,4 +376,4 @@ graph TD
 ```
 
 ### Next Immediate Action:
-Proceed with **Phase 1** to modularize the models and check functions matching `api/api.md`.
+Proceed with **Phase 4**: create `Dockerfile` and `.dockerignore`, verify local container execution, and prepare Google Cloud Run deployment.

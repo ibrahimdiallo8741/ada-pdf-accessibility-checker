@@ -5,6 +5,15 @@ Preliminary screening prototype evaluating PDF documents for potential accessibi
 > **Disclaimer:** This tool provides automated preliminary screening checks. It is **not** an official ADA or WCAG compliance certification.
 
 ---
+## Live Deployment
+
+|Access via|Main application|Testing endpoint|
+|----------|----------------|----------------|
+|Cloudflare|https://adacheck.deltadizzy.org|https://adacheck.deltadizzy.org/api/test-runner|
+|Google Cloud|https://ada-compliance-checker-295390844193.us-central1.run.app|https://ada-compliance-checker-295390844193.us-central1.run.app/api/test-runner|
+
+
+---
 
 ## Prerequisites
 
@@ -83,10 +92,10 @@ uv run python -m tests.runner path/to/custom_pdfs/
 
 ## Documentation
 
-Detailed architecture, check specifications, and future roadmap in [`docs/`](docs/):
-- [`PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md): Feature list, WCAG citations, checks, and limits.
-- [`FUTURE_WORK.md`](docs/FUTURE_WORK.md): Descoping log (webpage scan) and future enhancements.
-- [`PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md): Original project background and handoff details.
-- [`WEB_HOSTING_AND_ARCHITECTURE_PLAN.md`](docs/WEB_HOSTING_AND_ARCHITECTURE_PLAN.md): Cloudflare and container hosting specifications.
-- [`CLOUD_HOSTING_COMPARISON.md`](docs/CLOUD_HOSTING_COMPARISON.md): Multi-vendor cloud hosting assessment and free-tier comparison.
-- [`AGENTS.md`](AGENTS.md): Contributor conventions and agent development principles.
+Consolidated architectural, technical, and compliance specifications in [`docs/`](docs/):
+- [`ARCHITECTURE.md`](docs/ARCHITECTURE.md): System design, component structure, data models, REST API, privacy invariants, and Cloud Run + Cloudflare topology.
+- [`WCAG_CHECKS_REFERENCE.md`](docs/WCAG_CHECKS_REFERENCE.md): Technical check definitions, WCAG 2.1 AA citations, boundaries, status enums, and remediation guidance catalog.
+- [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–004) detailing scope, parser engine, hosting, and tooling choices.
+- [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–4) and planned post-prototype enhancements.
+- [`CLOUD_HOSTING_COMPARISON.md`](docs/CLOUD_HOSTING_COMPARISON.md): Multi-vendor hosting assessment and free-tier trade-off evaluation.
+- [`AGENTS.md`](AGENTS.md): Contributor conventions, agent directives, and verification rules.

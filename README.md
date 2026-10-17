@@ -95,6 +95,7 @@ uv run python -m tests.runner path/to/custom_pdfs/
 Consolidated architectural, technical, and compliance specifications in [`docs/`](docs/):
 - [`ARCHITECTURE.md`](docs/ARCHITECTURE.md): System design, component structure, data models, REST API, privacy invariants, and Cloud Run + Cloudflare topology.
 - [`WCAG_CHECKS_REFERENCE.md`](docs/WCAG_CHECKS_REFERENCE.md): Technical check definitions, WCAG 2.1 AA citations, boundaries, status enums, and remediation guidance catalog.
+- [`WCAG_TAXONOMY.md`](docs/WCAG_TAXONOMY.md): Complete coverage taxonomy of all 50 WCAG 2.1 Level A & AA criteria (implemented, planned, out-of-scope, N/A).
 - [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–004) detailing scope, parser engine, hosting, and tooling choices.
 - [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–4) and planned post-prototype enhancements.
 - [`CLOUD_HOSTING_COMPARISON.md`](docs/CLOUD_HOSTING_COMPARISON.md): Multi-vendor hosting assessment and free-tier trade-off evaluation.

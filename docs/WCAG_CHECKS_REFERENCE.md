@@ -1,6 +1,6 @@
 # WCAG Checks & Remediation Reference
 
-> **Executive Summary**: This document specifies the 5 rule-based screening checks implemented in the ADA PDF Accessibility Checker. It defines the mapping to WCAG 2.1 Level AA and ADA Title II technical criteria, evaluation boundaries, status classification rules, and standard remediation guidance.
+> **Executive Summary**: This document specifies the 5 rule-based screening checks currently implemented in the ADA Compliance Checker. It defines the mapping to WCAG 2.1 Level AA and ADA Title II technical criteria, evaluation boundaries, status classification rules, and standard remediation guidance.
 
 ---
 

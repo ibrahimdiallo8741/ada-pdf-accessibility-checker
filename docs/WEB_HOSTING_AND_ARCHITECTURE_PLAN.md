@@ -102,11 +102,17 @@ ada-pdf-accessibility-checker/
 │   ├── app.py                # FastAPI routes matching api/api.md
 │   ├── storage.py            # In-memory scan state & results manager
 │   └── templates/
-│       └── index.html        # Clean web upload & automated test runner UI
+├── docs/                     # Project documentation directory
+│   
+│   ├── PROJECT_DOCUMENTATION.md
+│   ├── FUTURE_WORK.md
+│   ├── PROJECT_HANDOFF.md
+│   └── WEB_HOSTING_AND_ARCHITECTURE_PLAN.md
+├── AGENTS.md                 # AI agent contributor instructions and guidelines
+├── README.md                 # Repository overview
 ├── Dockerfile                # Production container for Cloud Run / Render
 ├── pdf_checker.py            # Backward-compatible CLI wrapper
-├── pyproject.toml            # Project dependencies
-└── README.md
+└── pyproject.toml            # Project dependencies
 ```
 
 ### 4.1 Component Details

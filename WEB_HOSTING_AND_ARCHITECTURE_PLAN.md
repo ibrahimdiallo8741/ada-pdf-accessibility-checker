@@ -47,7 +47,7 @@ sequenceDiagram
 | Method | Endpoint | Request | Success Response | Error Codes | Requirements |
 |---|---|---|---|---|---|
 | `POST` | `/api/scans/pdf` | `multipart/form-data` with `file` (≤25 MB) | `202 Accepted`<br/>`{"scan_id": str, "status": "ANALYZING"}` | `400` (corrupt), `413` (>25MB), `415` (non-PDF), `500` | REQ-02, REQ-03, REQ-12, REQ-15 |
-| `POST` | `/api/scans/web` | JSON `{"url": "https://..."}` | `202 Accepted`<br/>`{"scan_id": str, "status": "ANALYZING"}` | `400` (invalid URL), `422` (unreachable/private), `500` | REQ-01, REQ-02, REQ-12 |
+| `POST` | `/api/scans/web` | JSON `{"url": "https://..."}` | `422 Unprocessable Entity`<br/>`{"error": "UNSUPPORTED_INPUT", "message": "Webpage scanning is outside current prototype scope; use /api/scans/pdf."}` *(or 202 transitioning to REJECTED)* | `400` (invalid URL), `422` (unsupported/scope), `500` | REQ-01, REQ-02, REQ-12 |
 | `GET` | `/api/scans/{scan_id}/status` | Path parameter `scan_id` | `200 OK`<br/>`{"scan_id": str, "status": "<STATE>"}` | `404` (not found) | REQ-12, REQ-13, REQ-18 |
 | `GET` | `/api/scans/{scan_id}/results` | Path parameter `scan_id` | `200 OK`<br/>`{summary: {...}, findings: [...]}` | `404` (not found), `409` (not ready) | REQ-06–REQ-10, REQ-15, REQ-17 |
 | `POST` | `/api/test-runner` | Optional JSON options | `200 OK`<br/>`{total: int, passed: int, results: [...]}` | `500` | AC-01–AC-18 automated test suite |
@@ -166,6 +166,7 @@ FastAPI application mounting the specification endpoints:
 - Validates 25 MB file limit, rejecting oversized files with HTTP 413.
 - Validates MIME type, rejecting non-PDFs with HTTP 415.
 - Dispatches background scan task, returning HTTP 202 immediately.
+- Rejects `POST /api/scans/web` with HTTP 422 / `REJECTED` state explaining web scanning is outside current prototype scope (REQ-12).
 - Provides interactive Swagger documentation at `/docs`.
 
 #### 5. `tests/runner.py`

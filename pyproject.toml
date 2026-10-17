@@ -1,10 +1,13 @@
 [project]
 name = "ada-pdf-accessibility-checker"
 version = "0.1.0"
-description = "Add your description here"
+description = "ADA PDF Accessibility Screening Prototype"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pymupdf==1.28.2", 
-    "pypdf==6.21.0"
+    "fastapi>=0.115.0",
+    "pymupdf==1.28.2",
+    "pypdf==6.21.0",
+    "python-multipart>=0.0.12",
+    "uvicorn>=0.32.0"
 ]

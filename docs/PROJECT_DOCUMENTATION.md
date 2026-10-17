@@ -2,7 +2,7 @@
 
 ## 1. Current Featureset
 
-The codebase provides an automated accessibility screening engine and test runner for Portable Document Format (PDF) files:
+The codebase provides an automated accessibility screening engine, asynchronous REST API, interactive web portal, and test runner for Portable Document Format (PDF) files:
 
 - **CLI File Ingestion (`pdf_checker.py`):** Accepts relative or absolute file paths from interactive standard input; automatically strips surrounding quotes and whitespace.
 - **Dual PDF Engine Parser (`core/checker.py`):**
@@ -10,6 +10,9 @@ The codebase provides an automated accessibility screening engine and test runne
   - `pypdf`: Traverses the low-level PDF document catalog dictionary (`/Root` via `reader.root_object`) to detect structural markup elements.
 - **Dual Ingestion Sources (Paths & In-Memory Bytes):** `screen_pdf` accepts both filesystem paths and raw `bytes` buffers, allowing direct memory screening for web uploads without writing temporary files to disk.
 - **Standardized Domain Contracts (`core/models.py`):** Strongly-typed dataclasses (`Finding`, `ScanSummary`, `ScanResult`, `TestCaseResult`, `TestSuiteSummary`) adhering directly to the `api/api.md` schema with native JSON serialization.
+- **FastAPI Web Service (`web/app.py`):** Asynchronous REST API strictly implementing `api/api.md` endpoints (`POST /api/scans/pdf`, `POST /api/scans/web`, `GET /api/scans/{scan_id}/status`, `GET /api/scans/{scan_id}/results`, `POST /api/test-runner`) with interactive Swagger documentation (`/docs`).
+- **In-Memory Scan Job Store (`web/storage.py`):** Thread-safe asynchronous job tracker enforcing a 1-hour expiration policy for uploaded file data (REQ-16).
+- **Interactive Browser Portal (`web/templates/index.html`):** Single-page web application featuring drag-and-drop PDF uploads, client-side size checks, live status polling, tabular findings display, JSON report export, and one-click acceptance test execution.
 - **Document Metadata Verification:** Screens for presence of title strings in the document information dictionary.
 - **Document Language Verification:** Screens for a default natural language tag in the document catalog.
 - **Document Structure Tag Detection:** Screens for structural tagging presence via the document catalog's structure tree root (`/StructTreeRoot`).
@@ -114,11 +117,26 @@ The codebase implements 5 automated screening checks for PDF documents. Each che
 
 ---
 
-## 4. Automated Testing Subsystem
+## 4. Web API & Interface Architecture
 
-The codebase includes an automated test runner (`tests/runner.py`) executable via:
+### 4.1 Endpoints Specification (`web/app.py`)
+- `GET /`: Serves the interactive single-page web UI (`web/templates/index.html`).
+- `POST /api/scans/pdf`: Multipart file upload (25 MB max limit). Returns HTTP 202 with `{"scan_id": str, "status": "ANALYZING"}`.
+- `POST /api/scans/web`: Returns HTTP 422 with explanation that web scanning is descoped for prototype (REQ-12).
+- `GET /api/scans/{scan_id}/status`: Returns current lifecycle state (`VALIDATING`, `ANALYZING`, `COMPLETED`, `REJECTED`).
+- `GET /api/scans/{scan_id}/results`: Returns completed `ScanResult` containing summary metrics and findings.
+- `POST /api/test-runner`: Triggers acceptance test suite across fixtures and returns `TestSuiteSummary`.
+- `GET /docs`: Interactive OpenAPI / Swagger UI.
+
+---
+
+## 5. Automated Testing Subsystem
+
+The codebase includes an automated test runner (`tests/runner.py`) executable via CLI or HTTP API:
 ```bash
 python -m tests.runner
+# or via uv:
+uv run python -m tests.runner
 ```
 It validates 9 acceptance criteria against deterministic PDF fixtures located in `tests/fixtures/`:
 1. `fixture_accessible.pdf`: Asserts that fully formed documents pass title, language, text, and image checks while flagging structure for review.
@@ -133,15 +151,15 @@ It validates 9 acceptance criteria against deterministic PDF fixtures located in
 
 ---
 
-## 5. Unimplemented Major Features
+## 6. Unimplemented Major Features
 
 The following features represent capabilities not yet present in the codebase:
 
-### 5.1 Interface & Delivery (Phase 3 & 4)
-- **FastAPI Web Service:** Asynchronous REST endpoints (`POST /api/scans/pdf`, `GET /api/scans/{scan_id}/status`, `GET /api/scans/{scan_id}/results`, `POST /api/test-runner`) and browser UI.
-- **Web Page / URL Accessibility Analysis:** Network crawler and HTML DOM scanner to evaluate live URLs against WCAG 2.1 AA (descoped for prototype).
+### 6.1 Containerization & Deployment (Phase 4)
+- **Production Containerization:** `Dockerfile` based on `python:3.13-slim` runnable on Cloud Run or Render free tier.
+- **Edge Proxy Configuration:** Cloudflare free tier CNAME proxy with SSL, DDoS mitigation, and edge caching.
 
-### 5.2 Structural & Semantic PDF Inspection
+### 6.2 Structural & Semantic PDF Inspection
 - **Structure Tree Traversal and Validation:** Recursive parser for `/StructTreeRoot` to verify hierarchical nesting and structural validity.
 - **Alternative Text Extraction and Evaluation:** Direct extraction of `/Alt` strings from `/Figure` structure elements to confirm alt text presence and length.
 - **Heading Level Hierarchy Analysis (WCAG 1.3.1, PDF9):** Validation of heading levels (`<H1>` through `<H6>`) to ensure no skipped heading levels.
@@ -151,5 +169,5 @@ The following features represent capabilities not yet present in the codebase:
 - **Interactive Form Field Verification (WCAG 1.3.1, 4.1.2):** Inspection of AcroForm dictionaries for accessible names, descriptions, and tooltip attributes.
 - **Document Navigation & Bookmarks (WCAG 2.4.5):** Verification that multi-page documents include an outline dictionary (`/Outlines`) with navigation bookmarks.
 
-### 5.3 AI-Assisted Accessibility Analysis (REQ-06)
+### 6.3 AI-Assisted Accessibility Analysis (REQ-06)
 - GenAI integration for contextual alt-text assessment and plain-language explanation of barriers.

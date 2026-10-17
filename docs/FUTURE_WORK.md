@@ -27,5 +27,5 @@
 ## 3. Implementation Roadmap Status
 - **Phase 1 (Completed):** Modular core domain models (`Finding`, `ScanSummary`, `ScanResult`), pure WCAG check rules (`core/checks.py`), and in-memory byte streaming coordinator (`core/checker.py`).
 - **Phase 2 (Completed):** Automated test runner (`tests/runner.py`) with 9 acceptance assertions against deterministic test fixtures (`tests/fixtures/`).
-- **Phase 3 (Pending):** FastAPI web server (`web/app.py`), in-memory scan store (`web/storage.py`), asynchronous lifecycle endpoints (`/api/scans/pdf`, `/api/scans/{scan_id}/status`, `/api/scans/{scan_id}/results`), automated test endpoint (`/api/test-runner`), and browser UI (`web/templates/index.html`).
+- **Phase 3 (Completed):** FastAPI web server (`web/app.py`), in-memory scan store (`web/storage.py`), asynchronous lifecycle endpoints (`/api/scans/pdf`, `/api/scans/{scan_id}/status`, `/api/scans/{scan_id}/results`), automated test endpoint (`/api/test-runner`), and browser UI (`web/templates/index.html`).
 - **Phase 4 (Pending):** Containerization (`Dockerfile`) and Cloudflare edge deployment.

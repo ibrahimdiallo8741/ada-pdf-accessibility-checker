@@ -115,7 +115,7 @@ Print summary + save JSON report beside PDF
 Ask for and read the instructor's **actual Phase 3 prompt/rubric** and the team's earlier phase materials. Do not guess which deliverables are required. Use this handoff as implementation evidence, then draft only what the rubric calls for. A useful narrative may cover the problem, target users, narrowed PDF scope, architecture, implementation, test cases/results, limitations, collaboration, and next steps—**but these are suggestions, not verified rubric requirements**.
 
 ## 9. Guidance for future AI agents
-- Read `AGENTS.md` first and inspect the actual repository before proposing edits.
+- Read [`AGENTS.md`](../AGENTS.md) at the repository root first and inspect the actual repository before proposing edits.
 - Preserve the existing working CLI behavior and report schema unless the team approves changes.
 - Keep language student-friendly and make every code change explainable.
 - Do not confuse finding a structure tree with validating the tags.

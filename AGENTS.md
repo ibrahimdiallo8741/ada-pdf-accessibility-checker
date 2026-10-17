@@ -18,11 +18,18 @@ Contribute to a student team project that screens PDF files for potential access
 - `tests/`: Automated testing subsystem.
   - `tests/fixtures/`: Curated test sample PDFs (`fixture_accessible.pdf`, `fixture_scanned.pdf`, `fixture_images.pdf`).
   - `tests/runner.py`: Automated test runner executing acceptance checks (AC-01 through AC-18).
+- `web/`: FastAPI web application and user interface.
+  - `web/app.py`: REST routes matching `api/api.md` specifications and automated test runner trigger.
+  - `web/storage.py`: Thread-safe in-memory scan job tracker with 1-hour expiration (REQ-16).
+  - `web/templates/index.html`: Zero-dependency web UI for drag-and-drop screening, polling, report download, and test runner.
 - `pdf_checker.py`: Python command-line program delegating to `core.checker.screen_pdf()`. Prompts for a PDF file path, prints findings, and saves a JSON report beside the input PDF.
 - `requirements.txt` / `pyproject.toml`: Python dependencies managed via uv/pip; contains `pymupdf` and `pypdf`.
-- `README.md`: Existing repository overview.
-- `PROJECT_DOCUMENTATION.md`: Technical documentation of current featureset, implemented checks, WCAG citations, and roadmap items.
-- `FUTURE_WORK.md`: Log of descoped items (e.g. web scanning) and planned future enhancements.
+- `docs/`: Project documentation directory.
+  - `docs/README.md`: Existing repository overview.
+  - `docs/PROJECT_DOCUMENTATION.md`: Technical documentation of current featureset, implemented checks, WCAG citations, and roadmap items.
+  - `docs/FUTURE_WORK.md`: Log of descoped items (e.g. web scanning) and planned future enhancements.
+  - `docs/PROJECT_HANDOFF.md`: Project orientation, background, and initial state.
+  - `docs/WEB_HOSTING_AND_ARCHITECTURE_PLAN.md`: Architecture specification and hosting plan.
 - `.gitignore`: Existing Git ignore rules. Do not commit `.venv/` or sensitive/test documents by accident.
 
 ## Current program logic
@@ -57,7 +64,7 @@ Statuses in the implementation: `Pass`, `Issue`, `Needs Human Review`, `Could No
 - Do not silently expand the project to URL/website scanning. Confirm with the team before changing scope.
 
 ## Working conventions for contributors
-1. Read `README.md`, `PROJECT_HANDOFF.md`, `pdf_checker.py`, and `requirements.txt` before modifying code.
+1. Read `README.md`, `docs/PROJECT_HANDOFF.md`, `pdf_checker.py`, and `requirements.txt` before modifying code.
 2. Keep existing working checks and JSON output functional unless an explicitly approved change requires otherwise.
 3. Make small, explainable changes and use clear beginner-friendly Python. The instructor allows AI assistance, but the team must understand and explain the logic.
 4. Prefer a new feature branch and pull request for group contributions; coordinate before pushing to `main`.
@@ -67,7 +74,7 @@ Statuses in the implementation: `Pass`, `Issue`, `Needs Human Review`, `Could No
 8. Preserve or update the JSON schema intentionally; note any breaking changes.
 9. Avoid broad refactors and new frameworks unless they are required by the course rubric.
 10. Never commit `.venv`, credentials, access tokens, or sensitive PDFs.
-11. **Documentation Synchronization:** Keep `PROJECT_DOCUMENTATION.md`, `FUTURE_WORK.md`, and `AGENTS.md` up to date whenever features or phases are planned, descoped, or implemented. Reflect current code state, active architecture, test results, and limitations across all three files.
+11. **Documentation Synchronization:** Keep `docs/PROJECT_DOCUMENTATION.md`, `docs/FUTURE_WORK.md`, and `AGENTS.md` up to date whenever features or phases are planned, descoped, or implemented. Reflect current code state, active architecture, test results, and limitations across all three files.
 
 ## Local setup (Windows Command Prompt)
 ```bat
@@ -81,12 +88,12 @@ Or with `uv`:
 ```bash
 uv run python pdf_checker.py
 uv run python -m tests.runner
+uv run uvicorn web.app:app --reload
 ```
 
 ## Next priorities
 1. Confirm current code and requirements match the repository.
-2. Preserve the working prototype and existing tests.
-3. Complete Phase 3 (FastAPI web routes, in-memory scan store, and web UI) and Phase 4 (containerization & Cloudflare edge).
+2. Complete Phase 4 (containerization & Cloudflare edge deployment).
 
 ## Definition of done for any new contribution
 Code runs locally; existing checks still work; changes are tested with evidence; documentation reflects actual behavior; accessibility claims are carefully qualified; team can explain the logic; and work is committed via an agreed GitHub workflow.

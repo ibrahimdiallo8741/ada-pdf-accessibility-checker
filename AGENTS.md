@@ -6,7 +6,7 @@ Contribute to a student team project that screens PDF files for potential access
 ## Project location and status
 - GitHub repository: `https://github.com/ibrahimdiallo8741/ada-pdf-accessibility-checker`
 - Main branch: `main`
-- Last user-confirmed pushed commit: `b4cde35` — `Complete PDF accessibility screening prototype` (October 16, 2026).
+- Last user-confirmed pushed commit: `b4cde35` — `Complete PDF accessibility screening prototype` (October 16, 2026). If a subsequent commit is currently the latest, update this bullet point accordingly.
 - Team collaboration is via GitHub; collaborators have been invited.
 - **Before changing code, inspect the repository's current files.** This document is a handoff from the development conversation, not an independently audited snapshot of the live repository.
 

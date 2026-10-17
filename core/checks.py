@@ -69,7 +69,7 @@ def check_structure(root_object: Any, finding_id: str = "F003") -> Finding:
             WCAG_criterion="1.3.1 Info and Relationships (Level A)",
             analysis_method="Deterministic",
             status="Needs Human Review",
-            remediation_guidance="Verify that tag semantics (<H1>, <P>, <Table>) and reading order match visual layout.",
+            remediation_guidance="Verify that tag semantics (<h1>, <p>, <table>) and reading order match visual layout.",
             additional_details="Structural root exists; tag quality requires human verification.",
         )
     return Finding(

@@ -4,165 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ADA PDF Accessibility Screening Portal</title>
-  <style>
-    :root {
-      --primary: #1e3a8a;
-      --primary-hover: #1e40af;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --pass-bg: #dcfce7;
-      --pass-text: #166534;
-      --issue-bg: #fee2e2;
-      --issue-text: #991b1b;
-      --review-bg: #fef3c7;
-      --review-text: #92400e;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      padding: 1.5rem;
-    }
-    .container { max-width: 1080px; margin: 0 auto; }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    h1 { font-size: 1.5rem; color: var(--primary); font-weight: 700; }
-    .nav-links a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-      margin-left: 1rem;
-      padding: 0.35rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: #fff;
-    }
-    .nav-links a:hover { background: #f1f5f9; }
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-    .tab-btn {
-      padding: 0.6rem 1.25rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #fff;
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-    .tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.75rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .drop-zone {
-      border: 2px dashed #cbd5e1;
-      border-radius: 8px;
-      padding: 2.5rem 1rem;
-      text-align: center;
-      background: #f8fafc;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .drop-zone.dragover { border-color: var(--primary); background: #eff6ff; }
-    .btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 0.65rem 1.25rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-    .btn:hover { background: var(--primary-hover); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid var(--border);
-      margin-left: 0.5rem;
-    }
-    .btn-secondary:hover { background: #f1f5f9; }
-    .status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .badge-pass { background: var(--pass-bg); color: var(--pass-text); }
-    .badge-issue { background: var(--issue-bg); color: var(--issue-text); }
-    .badge-review { background: var(--review-bg); color: var(--review-text); }
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-    .metric-card {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-    }
-    .metric-val { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
-    .metric-lbl { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-    th, td {
-      padding: 0.75rem 0.85rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-    th { background: #f8fafc; font-weight: 600; color: var(--text-muted); }
-    .disclaimer {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      background: #f1f5f9;
-      border-left: 4px solid var(--primary);
-      padding: 0.75rem 1rem;
-      border-radius: 4px;
-      margin-top: 1.5rem;
-    }
-    .hidden { display: none; }
-    .spinner {
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid #cbd5e1;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 0.5rem;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <div class="container">
@@ -193,7 +35,7 @@
         <div id="file-details" style="margin-top: 1rem; font-size: 0.9rem;" class="hidden">
           Selected: <strong id="selected-name"></strong> (<span id="selected-size"></span>)
         </div>
-        <button class="btn" id="start-btn" onclick="startScan()" disabled>Start Accessibility Scan</button>
+        <button class="btn" id="start-btn" onclick="startScan()" disabled>Start Scan</button>
       </div>
 
       <!-- Live Progress -->
@@ -245,10 +87,10 @@
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
           <div>
-            <h2 style="font-size: 1.15rem;">Automated Acceptance Test Suite</h2>
+            <h2 style="font-size: 1.15rem;">Automated Test Suite</h2>
             <p style="font-size: 0.85rem; color: var(--text-muted);">Validates core checks and input robustness against AC-01 to AC-18.</p>
           </div>
-          <button class="btn" id="run-tests-btn" onclick="runAutomatedTests()">Run Acceptance Tests</button>
+          <button class="btn" id="run-tests-btn" onclick="runAutomatedTests()">Run Tests</button>
         </div>
 
         <div id="tests-summary-box" class="hidden" style="margin-bottom: 1rem;">
@@ -270,7 +112,7 @@
             </tr>
           </thead>
           <tbody id="tests-tbody">
-            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Click "Run Acceptance Tests" to begin.</td></tr>
+            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Click "Run Tests" to begin.</td></tr>
           </tbody>
         </table>
       </div>
@@ -281,206 +123,6 @@
     </div>
   </div>
 
-  <script>
-    let selectedFile = null;
-    let currentResults = null;
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files.length) handleFile(fileInput.files[0]);
-    });
-
-    function handleFile(file) {
-      if (!file.name.toLowerCase().endsWith('.pdf')) {
-        alert('Please select a valid PDF file.');
-        return;
-      }
-      if (file.size > 25 * 1024 * 1024) {
-        alert('File size exceeds the 25 MB limit.');
-        return;
-      }
-      selectedFile = file;
-      document.getElementById('selected-name').textContent = file.name;
-      document.getElementById('selected-size').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-      document.getElementById('file-details').classList.remove('hidden');
-      document.getElementById('start-btn').disabled = false;
-    }
-
-    function switchTab(tab) {
-      document.getElementById('tab-scan').classList.toggle('active', tab === 'scan');
-      document.getElementById('tab-tests').classList.toggle('active', tab === 'tests');
-      document.getElementById('view-scan').classList.toggle('hidden', tab !== 'scan');
-      document.getElementById('view-tests').classList.toggle('hidden', tab !== 'tests');
-    }
-
-    async function startScan() {
-      if (!selectedFile) return;
-      document.getElementById('start-btn').disabled = true;
-      document.getElementById('progress-card').classList.remove('hidden');
-      document.getElementById('results-card').classList.add('hidden');
-      document.getElementById('progress-status').textContent = 'Uploading and validating PDF...';
-
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      try {
-        const res = await fetch('/api/scans/pdf', { method: 'POST', body: formData });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || 'Upload failed');
-        }
-        const data = await res.json();
-        document.getElementById('progress-scan-id').textContent = data.scan_id;
-        pollStatus(data.scan_id);
-      } catch (err) {
-        alert('Scan submission failed: ' + err.message);
-        document.getElementById('progress-card').classList.add('hidden');
-        document.getElementById('start-btn').disabled = false;
-      }
-    }
-
-    async function pollStatus(scanId) {
-      document.getElementById('progress-status').textContent = 'Analyzing accessibility criteria...';
-      const interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/scans/${scanId}/status`);
-          const data = await res.json();
-          document.getElementById('progress-status').textContent = 'Status: ' + data.status;
-
-          if (data.status === 'COMPLETED') {
-            clearInterval(interval);
-            fetchResults(scanId);
-          } else if (data.status === 'REJECTED') {
-            clearInterval(interval);
-            alert('Scan was rejected: ' + (data.error || 'Corrupted or unreadable PDF'));
-            document.getElementById('progress-card').classList.add('hidden');
-            document.getElementById('start-btn').disabled = false;
-          }
-        } catch (err) {
-          clearInterval(interval);
-          alert('Error polling scan status: ' + err.message);
-          document.getElementById('start-btn').disabled = false;
-        }
-      }, 1000);
-    }
-
-    async function fetchResults(scanId) {
-      try {
-        const res = await fetch(`/api/scans/${scanId}/results`);
-        currentResults = await res.json();
-        renderResults(currentResults);
-        document.getElementById('progress-card').classList.add('hidden');
-        document.getElementById('results-card').classList.remove('hidden');
-        document.getElementById('start-btn').disabled = false;
-      } catch (err) {
-        alert('Failed fetching results: ' + err.message);
-      }
-    }
-
-    function escapeHTML(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function renderResults(res) {
-      document.getElementById('res-file').textContent = res.file_or_url;
-      document.getElementById('metric-pages').textContent = res.pages;
-      document.getElementById('metric-checks').textContent = res.summary.checks;
-      document.getElementById('metric-passed').textContent = res.summary.passed;
-      document.getElementById('metric-issues').textContent = res.summary.issues;
-      document.getElementById('metric-review').textContent = res.summary.human_review;
-
-      const tbody = document.getElementById('findings-tbody');
-      tbody.innerHTML = '';
-      res.findings.forEach(f => {
-        const tr = document.createElement('tr');
-        let badgeClass = 'badge-pass';
-        if (f.status === 'Issue') badgeClass = 'badge-issue';
-        else if (f.status === 'Needs Human Review') badgeClass = 'badge-review';
-
-        const findingId = escapeHTML(f.finding_id);
-        const location = escapeHTML(f.input_location);
-        const wcag = escapeHTML(f.WCAG_criterion);
-        const status = escapeHTML(f.status);
-        const desc = escapeHTML(f.issue_description);
-        const rem = f.remediation_guidance ? escapeHTML(f.remediation_guidance) : '';
-
-        tr.innerHTML = `
-          <td><strong>${findingId}</strong></td>
-          <td>${location}</td>
-          <td><span style="font-size: 0.8rem; color: var(--text-muted);">${wcag}</span></td>
-          <td><span class="status-badge ${badgeClass}">${status}</span></td>
-          <td>
-            <div>${desc}</div>
-            ${rem ? `<div style="font-size: 0.8rem; color: #475569; margin-top: 0.25rem;"><em>Remediation:</em> ${rem}</div>` : ''}
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function downloadJSON() {
-      if (!currentResults) return;
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentResults, null, 4));
-      const a = document.createElement('a');
-      a.href = dataStr;
-      a.download = `${currentResults.file_or_url.replace(/\.pdf$/i, '')}_accessibility_report.json`;
-      a.click();
-    }
-
-    async function runAutomatedTests() {
-      const btn = document.getElementById('run-tests-btn');
-      btn.disabled = true;
-      btn.textContent = 'Running tests...';
-      const tbody = document.getElementById('tests-tbody');
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;"><span class="spinner"></span> Executing test fixtures...</td></tr>';
-
-      try {
-        const res = await fetch('/api/test-runner', { method: 'POST' });
-        const summary = await res.json();
-
-        document.getElementById('test-metric-total').textContent = summary.total;
-        document.getElementById('test-metric-passed').textContent = summary.passed;
-        document.getElementById('test-metric-failed').textContent = summary.failed;
-        document.getElementById('tests-summary-box').classList.remove('hidden');
-
-        tbody.innerHTML = '';
-        summary.results.forEach((r, idx) => {
-          const tr = document.createElement('tr');
-          const badge = r.passed ? '<span class="status-badge badge-pass">PASS</span>' : '<span class="status-badge badge-issue">FAIL</span>';
-          const name = escapeHTML(r.name);
-          const reqRef = escapeHTML(r.requirement_ref || 'N/A');
-          const details = escapeHTML(r.details);
-          tr.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${badge}</td>
-            <td><strong>${name}</strong></td>
-            <td><span style="font-size: 0.8rem; color: var(--text-muted);">${reqRef}</span></td>
-            <td>${details}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        alert('Test runner error: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Run Acceptance Tests';
-      }
-    }
-  </script>
+  <script src="/static/app.js"></script>
 </body>
 </html>

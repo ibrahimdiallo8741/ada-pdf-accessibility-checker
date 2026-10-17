@@ -1,157 +1,62 @@
-
 import json
-from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Literal
 
-import pymupdf
-from pypdf import PdfReader
+from core.checker import screen_pdf
+from core.models import Finding, ScanResult
 
-
-@dataclass
-class CheckResult:
-    check: str
-    status: Literal["FOUND", "REVIEW", "INFO"]
-    details: str
+# Backward-compatibility aliases
+CheckResult = Finding
+AccessibilityReport = ScanResult
 
 
-@dataclass
-class AccessibilityReport:
-    file: str
-    pages: int = 0
-    checks: list[CheckResult] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-
-
-def check_pdf(file_path):
-    results = AccessibilityReport(file=Path(file_path).name)
-
-    def add_check(name, status, details):
-        results.checks.append(
-            CheckResult(
-                check=name,
-                status=status,
-                details=details
-            )
-        )
-
-        print(f"{name}: {details}")
-
-        if status == "REVIEW":
-            results.warnings.append(details)
-
+def check_pdf(file_path: str) -> ScanResult | None:
     try:
-        document = pymupdf.open(file_path)
-        reader = PdfReader(file_path)
+        scan_result = screen_pdf(file_path)
 
         print("\nPDF ACCESSIBILITY CHECKER")
         print("-------------------------")
         print("PDF opened successfully!")
+        print("Number of pages:", scan_result.pages)
+        print()
 
-        results.pages = len(document)
-        print("Number of pages:", len(document))
+        for finding in scan_result.findings:
+            print(f"{finding.input_location} ({finding.WCAG_criterion}): [{finding.status}] {finding.issue_description}")
+            if finding.remediation_guidance:
+                print(f"  Remediation: {finding.remediation_guidance}")
 
-        # Check document title
-        metadata = document.metadata or {}
-        title = metadata.get("title", "")
-
-        if title and title.strip():
-            add_check("Document title", "FOUND",
-                      f"Title found: {title}")
-        else:
-            add_check("Document title", "REVIEW",
-                      "No document title found.")
-
-        # Check document language
-        language = document.language
-
-        if language:
-            add_check("Document language", "FOUND",
-                      f"Language found: {language}")
-        else:
-            add_check("Document language", "REVIEW",
-                      "No document language specified.")
-
-        # Check PDF structure tree
-        root = reader.root_object
-
-        if "/StructTreeRoot" in root:
-            add_check("PDF structure", "FOUND",
-                      "Structure tree found. Tag quality needs review.")
-        else:
-            add_check("PDF structure", "REVIEW",
-                      "No PDF structure tree found.")
-
-        # Check each page
-        for page_number, page in enumerate(document.pages(), start=1):
-            print(f"\nChecking page {page_number}...")
-
-            # Check extractable text
-            text = page.get_text().strip()
-
-            if text:
-                add_check(
-                    f"Page {page_number} text",
-                    "FOUND",
-                    "Extractable text found."
-                )
-            else:
-                add_check(
-                    f"Page {page_number} text",
-                    "REVIEW",
-                    "No extractable text found. Manual review needed."
-                )
-
-            # Detect embedded images
-            images = page.get_images(full=True)
-
-            if images:
-                add_check(
-                    f"Page {page_number} images",
-                    "REVIEW",
-                    f"{len(images)} image resource(s) found. "
-                    "Check whether meaningful images have alt text."
-                )
-            else:
-                add_check(
-                    f"Page {page_number} images",
-                    "INFO",
-                    "No embedded image resources detected."
-                )
-
-        document.close()
-
-        # Generate JSON report
+        # Generate JSON report matching api/api.md schema
         report_path = Path(file_path).with_name(
             Path(file_path).stem + "_accessibility_report.json"
         )
 
         with open(report_path, "w", encoding="utf-8") as report:
-            json.dump(asdict(results), report, indent=4)
+            json.dump(scan_result.to_dict(), report, indent=4)
 
         # Display summary
         print("\n-------------------------")
         print("ACCESSIBILITY REVIEW SUMMARY")
         print("-------------------------")
-        print("Total pages:", results.pages)
-        print("Checks performed:", len(results.checks))
-        print("Items needing review:", len(results.warnings))
+        print("Total pages:", scan_result.pages)
+        print("Checks performed:", scan_result.summary.checks)
+        print("Passed:", scan_result.summary.passed)
+        print("Issues:", scan_result.summary.issues)
+        print("Items needing review:", scan_result.summary.human_review)
+        print("Could not evaluate:", scan_result.summary.could_not_evaluate)
         print("Report saved to:", report_path)
 
         print("\nNote: This is an automated screening tool.")
         print("It does not certify ADA or WCAG compliance.")
 
-        return results
+        return scan_result
 
     except (FileNotFoundError, OSError) as error:
         print("Error opening PDF:", error)
-    except Exception as error:
+        return None
+    except Exception as error:  # noqa: BLE001
         print("An error occurred:", error)
+        return None
 
 
 if __name__ == "__main__":
-    pdf_path = input(
-        "Enter the path to your PDF file: "
-    ).strip().strip('"')
-
+    pdf_path = input("Enter the path to your PDF file: ").strip().strip('"')
     check_pdf(pdf_path)

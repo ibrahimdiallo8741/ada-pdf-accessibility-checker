@@ -1,154 +1,284 @@
 {
-    "file": "test.pdf",
+    "scan_id": "S-904E6FDD",
+    "file_or_url": "test.pdf",
     "pages": 12,
-    "checks": [
+    "summary": {
+        "checks": 27,
+        "passed": 15,
+        "issues": 2,
+        "human_review": 10,
+        "could_not_evaluate": 0
+    },
+    "findings": [
         {
-            "check": "Document title",
-            "status": "REVIEW",
-            "details": "No document title found."
+            "finding_id": "F001",
+            "input_location": "Document Metadata",
+            "issue_description": "No document title found in metadata.",
+            "WCAG_criterion": "2.4.2 Page Titled (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Issue",
+            "remediation_guidance": "Specify a descriptive document title in the PDF information dictionary.",
+            "additional_details": "Title metadata is empty or absent."
         },
         {
-            "check": "Document language",
-            "status": "REVIEW",
-            "details": "No document language specified."
+            "finding_id": "F002",
+            "input_location": "Document Catalog",
+            "issue_description": "No default document language specified in catalog.",
+            "WCAG_criterion": "3.1.1 Language of Page (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Issue",
+            "remediation_guidance": "Set the default document language using the /Lang entry in the PDF catalog.",
+            "additional_details": "Document catalog /Lang entry is missing."
         },
         {
-            "check": "PDF structure",
-            "status": "FOUND",
-            "details": "Structure tree found. Tag quality needs review."
+            "finding_id": "F003",
+            "input_location": "Document Catalog /Root",
+            "issue_description": "PDF structure tree found (/StructTreeRoot present). Tag presence confirmed.",
+            "WCAG_criterion": "1.3.1 Info and Relationships (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Verify that tag semantics (<H1>, <P>, <Table>) and reading order match visual layout.",
+            "additional_details": "Structural root exists; tag quality requires human verification."
         },
         {
-            "check": "Page 1 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F004",
+            "input_location": "Page 1",
+            "issue_description": "Page 1 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 2731 characters."
         },
         {
-            "check": "Page 1 images",
-            "status": "INFO",
-            "details": "No embedded image resources detected."
+            "finding_id": "F005",
+            "input_location": "Page 1",
+            "issue_description": "Page 1 contains no embedded image resources.",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "No image XObjects detected."
         },
         {
-            "check": "Page 2 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F006",
+            "input_location": "Page 2",
+            "issue_description": "Page 2 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 2528 characters."
         },
         {
-            "check": "Page 2 images",
-            "status": "INFO",
-            "details": "No embedded image resources detected."
+            "finding_id": "F007",
+            "input_location": "Page 2",
+            "issue_description": "Page 2 contains no embedded image resources.",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "No image XObjects detected."
         },
         {
-            "check": "Page 3 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F008",
+            "input_location": "Page 3",
+            "issue_description": "Page 3 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 2599 characters."
         },
         {
-            "check": "Page 3 images",
-            "status": "REVIEW",
-            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F009",
+            "input_location": "Page 3",
+            "issue_description": "Page 3 contains 1 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 1 image XObject(s)."
         },
         {
-            "check": "Page 4 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F010",
+            "input_location": "Page 4",
+            "issue_description": "Page 4 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 2211 characters."
         },
         {
-            "check": "Page 4 images",
-            "status": "REVIEW",
-            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F011",
+            "input_location": "Page 4",
+            "issue_description": "Page 4 contains 1 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 1 image XObject(s)."
         },
         {
-            "check": "Page 5 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F012",
+            "input_location": "Page 5",
+            "issue_description": "Page 5 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 1086 characters."
         },
         {
-            "check": "Page 5 images",
-            "status": "REVIEW",
-            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F013",
+            "input_location": "Page 5",
+            "issue_description": "Page 5 contains 3 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 3 image XObject(s)."
         },
         {
-            "check": "Page 6 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F014",
+            "input_location": "Page 6",
+            "issue_description": "Page 6 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 1499 characters."
         },
         {
-            "check": "Page 6 images",
-            "status": "REVIEW",
-            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F015",
+            "input_location": "Page 6",
+            "issue_description": "Page 6 contains 3 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 3 image XObject(s)."
         },
         {
-            "check": "Page 7 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F016",
+            "input_location": "Page 7",
+            "issue_description": "Page 7 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 1242 characters."
         },
         {
-            "check": "Page 7 images",
-            "status": "REVIEW",
-            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F017",
+            "input_location": "Page 7",
+            "issue_description": "Page 7 contains 3 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 3 image XObject(s)."
         },
         {
-            "check": "Page 8 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F018",
+            "input_location": "Page 8",
+            "issue_description": "Page 8 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 1182 characters."
         },
         {
-            "check": "Page 8 images",
-            "status": "REVIEW",
-            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F019",
+            "input_location": "Page 8",
+            "issue_description": "Page 8 contains 3 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 3 image XObject(s)."
         },
         {
-            "check": "Page 9 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F020",
+            "input_location": "Page 9",
+            "issue_description": "Page 9 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 1727 characters."
         },
         {
-            "check": "Page 9 images",
-            "status": "REVIEW",
-            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F021",
+            "input_location": "Page 9",
+            "issue_description": "Page 9 contains 1 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 1 image XObject(s)."
         },
         {
-            "check": "Page 10 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F022",
+            "input_location": "Page 10",
+            "issue_description": "Page 10 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 2061 characters."
         },
         {
-            "check": "Page 10 images",
-            "status": "REVIEW",
-            "details": "2 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F023",
+            "input_location": "Page 10",
+            "issue_description": "Page 10 contains 2 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 2 image XObject(s)."
         },
         {
-            "check": "Page 11 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F024",
+            "input_location": "Page 11",
+            "issue_description": "Page 11 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 869 characters."
         },
         {
-            "check": "Page 11 images",
-            "status": "REVIEW",
-            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+            "finding_id": "F025",
+            "input_location": "Page 11",
+            "issue_description": "Page 11 contains 1 embedded image resource(s).",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Needs Human Review",
+            "remediation_guidance": "Ensure meaningful images have alternative text (/Alt) and decorative images are tagged as artifacts.",
+            "additional_details": "Found 1 image XObject(s)."
         },
         {
-            "check": "Page 12 text",
-            "status": "FOUND",
-            "details": "Extractable text found."
+            "finding_id": "F026",
+            "input_location": "Page 12",
+            "issue_description": "Page 12 contains extractable text.",
+            "WCAG_criterion": "1.4.5 Images of Text (Level AA)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "Extracted 988 characters."
         },
         {
-            "check": "Page 12 images",
-            "status": "INFO",
-            "details": "No embedded image resources detected."
+            "finding_id": "F027",
+            "input_location": "Page 12",
+            "issue_description": "Page 12 contains no embedded image resources.",
+            "WCAG_criterion": "1.1.1 Non-text Content (Level A)",
+            "analysis_method": "Deterministic",
+            "status": "Pass",
+            "remediation_guidance": null,
+            "additional_details": "No image XObjects detected."
         }
-    ],
-    "warnings": [
-        "No document title found.",
-        "No document language specified.",
-        "1 image resource(s) found. Check whether meaningful images have alt text.",
-        "1 image resource(s) found. Check whether meaningful images have alt text.",
-        "3 image resource(s) found. Check whether meaningful images have alt text.",
-        "3 image resource(s) found. Check whether meaningful images have alt text.",
-        "3 image resource(s) found. Check whether meaningful images have alt text.",
-        "3 image resource(s) found. Check whether meaningful images have alt text.",
-        "1 image resource(s) found. Check whether meaningful images have alt text.",
-        "2 image resource(s) found. Check whether meaningful images have alt text.",
-        "1 image resource(s) found. Check whether meaningful images have alt text."
     ]
 }

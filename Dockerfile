@@ -24,4 +24,4 @@ COPY pdf_checker.py /app/
 
 EXPOSE 8080
 
-CMD ["uvicorn", "web.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "exec uvicorn web.app:app --host 0.0.0.0 --port ${PORT:-8080}"]

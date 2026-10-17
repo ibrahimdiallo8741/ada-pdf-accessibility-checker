@@ -30,6 +30,7 @@ Contribute to a student team project that screens PDF files for potential access
   - `docs/FUTURE_WORK.md`: Log of descoped items (e.g. web scanning) and planned future enhancements.
   - `docs/PROJECT_HANDOFF.md`: Project orientation, background, and initial state.
   - `docs/WEB_HOSTING_AND_ARCHITECTURE_PLAN.md`: Architecture specification and hosting plan.
+  - `docs/CLOUD_HOSTING_COMPARISON.md`: Multi-vendor cloud hosting assessment and free-tier comparison.
 - `.gitignore`: Existing Git ignore rules. Do not commit `.venv/` or sensitive/test documents by accident.
 
 ## Current program logic
@@ -92,8 +93,9 @@ uv run uvicorn web.app:app --reload
 ```
 
 ## Next priorities
-1. Confirm current code and requirements match the repository.
-2. Complete Phase 4 (containerization & Cloudflare edge deployment).
+1. Execute Google Cloud Run container deployment (`gcloud run deploy --source .`).
+2. Configure custom domain mapping and Cloudflare Full (Strict) DNS proxy.
+3. Review team testing submissions and evaluate candidate custom test PDFs.
 
 ## Definition of done for any new contribution
 Code runs locally; existing checks still work; changes are tested with evidence; documentation reflects actual behavior; accessibility claims are carefully qualified; team can explain the logic; and work is committed via an agreed GitHub workflow.

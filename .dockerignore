@@ -1,0 +1,21 @@
+# Git & Version Control
+.git/
+.gitignore
+
+# Python Environments & Caches
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+
+# Local data & test artifacts
+*.json
+tests/fixtures/*.pdf
+!tests/fixtures/fixture_*.pdf
+
+# Documentation & plan artifacts
+docs/
+*.md

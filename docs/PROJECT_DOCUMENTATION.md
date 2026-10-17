@@ -156,8 +156,10 @@ It validates 9 acceptance criteria against deterministic PDF fixtures located in
 The following features represent capabilities not yet present in the codebase:
 
 ### 6.1 Containerization & Deployment (Phase 4)
-- **Production Containerization:** `Dockerfile` based on `python:3.13-slim` runnable on Cloud Run or Render free tier.
-- **Edge Proxy Configuration:** Cloudflare free tier CNAME proxy with SSL, DDoS mitigation, and edge caching.
+- **Production Containerization:** `Dockerfile` based on `python:3.13-slim` runnable via Docker/Docker Compose on Oracle Cloud Infrastructure (OCI) Always Free VPS (`VM.Standard.E2.1.Micro` or `VM.Standard.A1.Flex`).
+- **Edge Proxy & Tunnel Configuration:** Cloudflare free tier Tunnel (`cloudflared`) with zero open inbound ports, automatic SSL, DDoS mitigation, and edge caching.
+- **Production Containerization:** `Dockerfile` based on `python:3.13-slim` deployed to Google Cloud Run (Free Tier) with 512 MiB RAM and scale-to-zero autoscaling.
+- **Edge Proxy & DNS Configuration:** Cloudflare free tier CNAME proxy with Full (Strict) SSL encryption, DDoS mitigation, and edge caching for static assets.
 
 ### 6.2 Structural & Semantic PDF Inspection
 - **Structure Tree Traversal and Validation:** Recursive parser for `/StructTreeRoot` to verify hierarchical nesting and structural validity.

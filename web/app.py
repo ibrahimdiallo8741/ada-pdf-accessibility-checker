@@ -135,6 +135,7 @@ async def get_scan_results(scan_id: str):
     return job.result.to_dict()
 
 
+@app.get("/api/test-runner", tags=["Test Runner"])
 @app.post("/api/test-runner", tags=["Test Runner"])
 async def trigger_automated_tests():
     """Runs automated acceptance test suite against curated test fixtures (AC-01 through AC-18)."""

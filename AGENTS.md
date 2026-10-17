@@ -15,17 +15,19 @@
 - **No Hallucinations**: Do not claim checks evaluate criteria beyond their programmatic implementation.
 
 ## 3. Authoritative Technical References
-- **Architecture, Contracts, & Ingress**: [`docs/ARCHITECTURE.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/ARCHITECTURE.md)
-- **Check Logic & Remediation Catalog**: [`docs/WCAG_CHECKS_REFERENCE.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/WCAG_CHECKS_REFERENCE.md)
-- **Architecture Decision Records (ADRs)**: [`docs/DECISION_LOG.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/DECISION_LOG.md)
-- **Project Milestones & Future Evolution**: [`docs/ROADMAP.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/ROADMAP.md)
-- **Hosting Evaluation Benchmark**: [`docs/CLOUD_HOSTING_COMPARISON.md`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/docs/CLOUD_HOSTING_COMPARISON.md)
+- **Architecture, Contracts, & Ingress**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- **Check Logic & Remediation Catalog**: [`docs/WCAG_CHECKS_REFERENCE.md`](docs/WCAG_CHECKS_REFERENCE.md)
+- **WCAG 2.1 Coverage Taxonomy**: [`docs/WCAG_TAXONOMY.md`](docs/WCAG_TAXONOMY.md)
+- **Architecture Decision Records (ADRs)**: [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md)
+- **Project Milestones & Future Evolution**: [`docs/ROADMAP.md`](docs/ROADMAP.md)
+- **Hosting Evaluation Benchmark**: [`docs/CLOUD_HOSTING_COMPARISON.md`](docs/CLOUD_HOSTING_COMPARISON.md)
 
 ## 4. Contributor & Agent Working Rules
 1. **Inspection First**: Inspect relevant code in `core/`, `web/`, or `tests/` before modifying behavior.
 2. **Tooling & Environments**: Use `uv` exclusively (`uv run ...`, `uv add ...`). Do not use unpinned `pip` or create alternate virtualenvs.
 3. **Preserve Contracts**: Do not break domain models in `core/models.py` or REST schemas in `web/app.py`.
 4. **Documentation Synchronization**: When code, architecture, or roadmap items change, immediately update the corresponding docs in `docs/` and references in `README.md`.
+5. **Portable Markdown Links**: All internal document and code links inside markdown files must use relative paths (e.g., `docs/ARCHITECTURE.md` or `../core/models.py`), never machine-specific `file:///` URIs.
 
 ## 5. Verification Commands & Definition of Done
 - **Documentation-Only Changes**: Running verification commands is **not required** when changes are strictly confined to markdown documentation (`docs/`, `*.md`).

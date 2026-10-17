@@ -39,9 +39,38 @@
   - Page rasterization contrast calculation to evaluate WCAG 2.1 AA Criterion 1.4.3 (Contrast Minimum: 4.5:1 for normal text, 3:1 for large text).
   - Extraction and inspection of vector graphics and paths (PDF drawings not captured by XObject raster extraction).
 
-### Milestone 8: Contextual AI Alt-Text Assistance (REQ-06)
-- **Objective**: Augment the screening engine with optional, assistive AI capabilities without sacrificing deterministic reliability.
+### Milestone 8: Contextual AI Heuristic Assessment & Alt-Text (REQ-06)
+- **Objective**: Augment the screening engine with external cloud AI (LLM / multimodal vision) models to assess accessibility heuristics that cannot be settled deterministically or programmatically.
 - **Key Capabilities**:
-  - Extract cropped image regions alongside surrounding paragraph text context.
-  - Query local or cloud vision models to draft candidate alternative text descriptions.
-  - Maintain strict architectural separation: AI suggestions must remain explicitly labeled as human advisory recommendations, never automated pass/fail determinations.
+  - *Contextual Alt-Text Generation*: Extract cropped image regions alongside surrounding paragraph text context and query vision models for candidate descriptions (`WCAG 1.1.1`).
+  - *Sensory Instruction Detection*: Semantic text analysis to flag instructions that rely solely on sensory characteristics like shape, color, or spatial orientation (`WCAG 1.3.3`).
+  - *Color-Only Reliance Screening*: Multimodal vision assessment of diagrams, charts, and forms to flag states communicated solely through color (`WCAG 1.4.1`).
+  - *Content Meaningfulness Heuristics*: AI evaluation of title descriptiveness (`WCAG 2.4.2`), contextual link purpose (`WCAG 2.4.4`), and heading/label clarity (`WCAG 2.4.6`).
+  - *Strict Architectural Invariant*: AI suggestions must always be labeled as advisory human recommendations, never automated pass/fail compliance certifications.
+
+---
+
+## 3. Required Testing Enhancements (AC & REQ Verification Roadmap)
+
+To ensure all Acceptance Criteria (AC-01 through AC-18) and core Requirements (REQ-01 through REQ-18) are robustly satisfied under edge cases and scaling, the following test suites are planned for implementation:
+
+### 3.1 Edge-Case & Boundary Fixtures (AC-01, AC-02, AC-11, REQ-03, REQ-12)
+- [ ] **Zero-Byte & Corrupted Header Rejection**: Test suite verifying that 0-byte files, truncated PDF headers, or corrupted cross-reference tables (`/XRef`) return clean `Could Not Evaluate` findings rather than unhandled server errors.
+- [ ] **Encrypted & Password-Protected Documents**: Fixture testing documents protected with user/owner passwords to verify that password-locked files are intercepted gracefully with remediation guidance ("Provide unencrypted document").
+- [ ] **Extreme Scale / Multi-Page Stress Test**: Benchmark test running against a 100+ page document to assert sub-linear memory consumption and ensure processing times remain within Cloud Run HTTP request timeout thresholds (60s).
+- [ ] **Page Boundary Accuracy (AC-15)**: Multi-page fixture asserting that findings reported on Page $N$ exactly map to Page $N$ without 0-index/1-index off-by-one errors.
+
+### 3.2 Security & Zero-Disk Retention Verification (AC-02, REQ-16, REQ-17)
+- [ ] **Filesystem Isolation Audit**: Automated test using filesystem watchers or OS path monitoring during a screening run to assert that 0 bytes are written to `/tmp`, the project directory, or any local storage during upload and analysis.
+- [ ] **Memory Buffer Deallocation**: Heap inspection test asserting that `io.BytesIO` references and PyMuPDF document instances are garbage-collected immediately upon job completion.
+
+### 3.3 Asynchronous Concurrency & TTL Expiration (AC-05, AC-06, AC-10, REQ-10)
+- [ ] **Concurrent Ingestion Stress Test**: Asynchronous pytest harness dispatching 10 simultaneous upload requests to `/api/scans/pdf` to verify thread safety in [`web/storage.py`](../web/storage.py) and absence of race conditions.
+- [ ] **Job Eviction / TTL Automated Verification (AC-13)**: Unit test with simulated timestamps asserting that completed scan jobs older than 3600 seconds (1 hour) are evicted from memory.
+- [ ] **API Contract & HTTP Status Suite**: Automated verification of HTTP responses: `202 Accepted` on upload, `200 OK` on polling/results, `404 Not Found` on unknown job IDs, and `422 Unprocessable Entity` on non-PDF uploads.
+
+### 3.4 Milestone-Specific Verification Suites
+- [ ] **Milestone 5 (Web Scanning)**: Mock HTTP fixtures evaluating accessible vs. inaccessible HTML DOM trees (validating form labels, heading hierarchy, skip navigation, and ARIA attributes).
+- [ ] **Milestone 6 (Structure Trees)**: Curated PDF fixtures with malformed tag hierarchies (e.g., `<Table>` lacking `<TR>`, skipped heading levels `<H1>` immediately followed by `<H3>`).
+- [ ] **Milestone 7 (Contrast Engine)**: Synthetic bitmap test fixtures with known RGB color pairs to verify contrast ratio formula accuracy ($21:1$, $4.5:1$, $3.0:1$, and failing ratios).
+- [ ] **Milestone 8 (AI Heuristic Isolation)**: Mock AI harness testing fallback behavior when cloud AI endpoints time out or fail, asserting that deterministic checks complete without disruption.

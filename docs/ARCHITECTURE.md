@@ -50,7 +50,7 @@ ada-pdf-accessibility-checker/
 
 ## 2. Domain Models & Data Contracts
 
-All screening findings and scan payloads adhere to strongly-typed dataclasses defined in [`core/models.py`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/core/models.py):
+All screening findings and scan payloads adhere to strongly-typed dataclasses defined in [`core/models.py`](../core/models.py):
 
 ```mermaid
 classDiagram
@@ -93,7 +93,7 @@ Every screening evaluation yields exactly one of four normalized statuses:
 
 ## 3. REST API Specifications
 
-The web interface ([`web/app.py`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/web/app.py)) exposes an asynchronous REST API:
+The web interface ([`web/app.py`](../web/app.py)) exposes an asynchronous REST API:
 
 | Method | Endpoint | Description | Request Payload | Response Status & Body |
 |---|---|---|---|---|
@@ -114,7 +114,7 @@ The screening engine adheres to strict data minimization principles by design:
    - Uploaded PDF bytes are never written to the filesystem, temporary directories (`/tmp`), or external persistent storage.
    - Once screening finishes, the memory stream is garbage collected.
 2. **Ephemeral In-Memory Job Storage**:
-   - Scan results and status metadata are stored in thread-safe memory dictionaries ([`web/storage.py`](file:///home/deltadizzy/Desktop/Programming/Python/ada-pdf-accessibility-checker/web/storage.py)).
+   - Scan results and status metadata are stored in thread-safe memory dictionaries ([`web/storage.py`](../web/storage.py)).
    - Completed scan results are automatically pruned after a **1-hour TTL** (3600 seconds) to prevent memory accumulation.
 3. **No External Exfiltration**:
    - Document contents are evaluated locally using deterministic Python libraries. No external cloud vision, third-party LLMs, or remote analytics receive user document contents.

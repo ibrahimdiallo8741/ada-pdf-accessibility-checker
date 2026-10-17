@@ -28,6 +28,7 @@
 3. **Preserve Contracts**: Do not break domain models in `core/models.py` or REST schemas in `web/app.py`.
 4. **Documentation Synchronization**: When code, architecture, or roadmap items change, immediately update the corresponding docs in `docs/` and references in `README.md`.
 5. **Portable Markdown Links**: All internal document and code links inside markdown files must use relative paths (e.g., `docs/ARCHITECTURE.md` or `../core/models.py`), never machine-specific `file:///` URIs.
+6. **Communication Style (Caveman Mode)**: If the `caveman` skill/mode is available in the agent environment, agents should operate in caveman mode (answer first, fluff removed, high token efficiency, all technical facts and code references preserved). If not installed, default to concise technical prose.
 
 ## 5. Verification Commands & Definition of Done
 - **Documentation-Only Changes**: Running verification commands is **not required** when changes are strictly confined to markdown documentation (`docs/`, `*.md`).

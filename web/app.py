@@ -4,6 +4,7 @@ from typing import Annotated
 import pymupdf
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pypdf.errors import PyPdfError
 
@@ -18,6 +19,10 @@ app = FastAPI(
     description="Automated screening prototype aligned with ADA Title II and WCAG 2.1 Level AA.",
     version="0.1.0",
 )
+
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 INDEX_HTML_PATH = Path(__file__).parent / "templates" / "index.html"
 

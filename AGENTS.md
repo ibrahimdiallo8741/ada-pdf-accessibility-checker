@@ -24,8 +24,8 @@ Contribute to a student team project that screens PDF files for potential access
   - `web/templates/index.html`: Zero-dependency web UI for drag-and-drop screening, polling, report download, and test runner.
 - `pdf_checker.py`: Python command-line program delegating to `core.checker.screen_pdf()`. Prompts for a PDF file path, prints findings, and saves a JSON report beside the input PDF.
 - `requirements.txt` / `pyproject.toml`: Python dependencies managed via uv/pip; contains `pymupdf` and `pypdf`.
+- `README.md`: Repository overview and developer quick reference.
 - `docs/`: Project documentation directory.
-  - `docs/README.md`: Existing repository overview.
   - `docs/PROJECT_DOCUMENTATION.md`: Technical documentation of current featureset, implemented checks, WCAG citations, and roadmap items.
   - `docs/FUTURE_WORK.md`: Log of descoped items (e.g. web scanning) and planned future enhancements.
   - `docs/PROJECT_HANDOFF.md`: Project orientation, background, and initial state.
@@ -64,7 +64,7 @@ Statuses in the implementation: `Pass`, `Issue`, `Needs Human Review`, `Could No
 - Do not silently expand the project to URL/website scanning. Confirm with the team before changing scope.
 
 ## Working conventions for contributors
-1. Read `README.md`, `docs/PROJECT_HANDOFF.md`, `pdf_checker.py`, and `requirements.txt` before modifying code.
+1. Read `README.md`, `docs/PROJECT_HANDOFF.md`, `pdf_checker.py`, and `pyproject.toml` before modifying code.
 2. Keep existing working checks and JSON output functional unless an explicitly approved change requires otherwise.
 3. Make small, explainable changes and use clear beginner-friendly Python. The instructor allows AI assistance, but the team must understand and explain the logic.
 4. Prefer a new feature branch and pull request for group contributions; coordinate before pushing to `main`.

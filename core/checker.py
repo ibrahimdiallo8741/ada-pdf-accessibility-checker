@@ -44,6 +44,30 @@ def screen_pdf(
         except (PyPdfError, ValueError, AttributeError):
             pass
 
+    # Detect if document remains password-locked
+    if getattr(doc_mu, "needs_pass", False) or getattr(reader_py, "is_encrypted", False):
+        try:
+            _ = reader_py.root_object
+        except (PyPdfError, ValueError, AttributeError, KeyError):
+            p_count = len(doc_mu) if (doc_mu and not getattr(doc_mu, "is_closed", False)) else 0
+            doc_mu.close()
+            finding = Finding(
+                finding_id="F001",
+                input_location="Document Catalog",
+                issue_description="The PDF document is password-protected or encrypted.",
+                WCAG_criterion="General Accessibility",
+                analysis_method="Deterministic",
+                status="Could Not Evaluate",
+                remediation_guidance="Ensure the PDF file is unencrypted, valid, and not password protected, then retry screening.",
+            )
+            return ScanResult(
+                scan_id=scan_id,
+                file_or_url=resolved_name,
+                pages=p_count,
+                summary=ScanSummary(checks=1, passed=0, issues=0, human_review=0, could_not_evaluate=1),
+                findings=[finding],
+            )
+
     findings: list[Finding] = []
     finding_counter = 1
 

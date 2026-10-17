@@ -57,6 +57,12 @@ class ScanStore:
                     job.error = error
             return job
 
+    def prune_expired(self) -> int:
+        with self._lock:
+            before = len(self._scans)
+            self._prune_expired_locked()
+            return before - len(self._scans)
+
     def _prune_expired_locked(self):
         now = time.time()
         expired_keys = [

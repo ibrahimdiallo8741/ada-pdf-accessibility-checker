@@ -6,6 +6,18 @@ from pypdf.errors import PyPdfError
 
 from core.checker import screen_pdf
 from core.models import TestCaseResult, TestSuiteSummary
+from tests.test_roadmap_sections import (
+    test_api_contract_and_statuses,
+    test_concurrent_ingestion_stress,
+    test_corrupt_header_rejection,
+    test_encrypted_pdf_handling,
+    test_filesystem_isolation_audit,
+    test_job_ttl_expiration,
+    test_memory_buffer_deallocation,
+    test_page_boundary_accuracy,
+    test_scale_multipage,
+    test_zero_byte_rejection,
+)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -232,6 +244,45 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
         )
     except (AssertionError, TypeError) as exc:
         record_test("Malformed / Corrupted Input Handling", False, f"Runner error ({type(exc).__name__}): {exc}", "AC-11, REQ-12")
+
+    # --------------------------------------------------------------------------
+    # Tests for ROADMAP.md Section 3.1: Edge-Case & Boundary Fixtures
+    # --------------------------------------------------------------------------
+    p_zero, d_zero = test_zero_byte_rejection()
+    record_test("Zero-Byte Stream Rejection", p_zero, d_zero, "AC-01, AC-02, AC-11, REQ-12")
+
+    p_corr, d_corr = test_corrupt_header_rejection()
+    record_test("Corrupted Header Rejection", p_corr, d_corr, "AC-11, REQ-12")
+
+    p_enc, d_enc = test_encrypted_pdf_handling()
+    record_test("Encrypted / Password-Protected Handling", p_enc, d_enc, "AC-11, REQ-12")
+
+    p_scale, d_scale = test_scale_multipage()
+    record_test("Extreme Scale / Multi-Page Stress Test", p_scale, d_scale, "AC-01, REQ-03")
+
+    p_bound, d_bound = test_page_boundary_accuracy()
+    record_test("Page Boundary Off-by-One Accuracy", p_bound, d_bound, "AC-15")
+
+    # --------------------------------------------------------------------------
+    # Tests for ROADMAP.md Section 3.2: Security & Zero-Disk Retention Verification
+    # --------------------------------------------------------------------------
+    p_iso, d_iso = test_filesystem_isolation_audit()
+    record_test("Filesystem Isolation Zero-Disk Audit", p_iso, d_iso, "AC-02, REQ-16, REQ-17")
+
+    p_mem, d_mem = test_memory_buffer_deallocation()
+    record_test("Memory Buffer Deallocation", p_mem, d_mem, "REQ-16")
+
+    # --------------------------------------------------------------------------
+    # Tests for ROADMAP.md Section 3.3: Asynchronous Concurrency & TTL Expiration
+    # --------------------------------------------------------------------------
+    p_conc, d_conc = test_concurrent_ingestion_stress()
+    record_test("Concurrent Ingestion Stress Test", p_conc, d_conc, "AC-05, AC-06, REQ-10")
+
+    p_ttl, d_ttl = test_job_ttl_expiration()
+    record_test("Job Eviction / TTL Expiration", p_ttl, d_ttl, "AC-13, REQ-16")
+
+    p_api, d_api = test_api_contract_and_statuses()
+    record_test("API Contract & HTTP Status Suite", p_api, d_api, "AC-10")
 
     # Dynamic Test: Screen any extra team-supplied PDFs in fixtures directory
     standard_fixtures = {"fixture_accessible.pdf", "fixture_scanned.pdf", "fixture_images.pdf"}

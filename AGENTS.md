@@ -34,7 +34,7 @@
 - **Documentation-Only Changes**: Running verification commands is **not required** when changes are strictly confined to markdown documentation (`docs/`, `*.md`).
 - **Code & Configuration Changes**: Work is complete only when:
 ```bash
-uv run python -m tests.runner     # Must pass 10/10 acceptance tests
+uv run python -m tests.runner     # Must pass 21/21 acceptance tests
 uv run python pdf_checker.py      # CLI execution remains functional
 uv run uvicorn web.app:app        # Web API & UI boots cleanly
 ```

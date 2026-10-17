@@ -1,29 +1,44 @@
 
+import json
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Literal
+
 import pymupdf
 from pypdf import PdfReader
-from pathlib import Path
-import json
+
+
+@dataclass
+class CheckResult:
+    check: str
+    status: Literal["FOUND", "REVIEW", "INFO"]
+    details: str
+
+
+@dataclass
+class AccessibilityReport:
+    file: str
+    pages: int = 0
+    checks: list[CheckResult] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 def check_pdf(file_path):
-    results = {
-        "file": Path(file_path).name,
-        "pages": 0,
-        "checks": [],
-        "warnings": []
-    }
+    results = AccessibilityReport(file=Path(file_path).name)
 
     def add_check(name, status, details):
-        results["checks"].append({
-            "check": name,
-            "status": status,
-            "details": details
-        })
+        results.checks.append(
+            CheckResult(
+                check=name,
+                status=status,
+                details=details
+            )
+        )
 
         print(f"{name}: {details}")
 
         if status == "REVIEW":
-            results["warnings"].append(details)
+            results.warnings.append(details)
 
     try:
         document = pymupdf.open(file_path)
@@ -33,7 +48,7 @@ def check_pdf(file_path):
         print("-------------------------")
         print("PDF opened successfully!")
 
-        results["pages"] = len(document)
+        results.pages = len(document)
         print("Number of pages:", len(document))
 
         # Check document title
@@ -58,7 +73,7 @@ def check_pdf(file_path):
                       "No document language specified.")
 
         # Check PDF structure tree
-        root = reader.trailer["/Root"]
+        root = reader.root_object
 
         if "/StructTreeRoot" in root:
             add_check("PDF structure", "FOUND",
@@ -68,7 +83,7 @@ def check_pdf(file_path):
                       "No PDF structure tree found.")
 
         # Check each page
-        for page_number, page in enumerate(document, start=1):
+        for page_number, page in enumerate(document.pages(), start=1):
             print(f"\nChecking page {page_number}...")
 
             # Check extractable text
@@ -112,19 +127,21 @@ def check_pdf(file_path):
         )
 
         with open(report_path, "w", encoding="utf-8") as report:
-            json.dump(results, report, indent=4)
+            json.dump(asdict(results), report, indent=4)
 
         # Display summary
         print("\n-------------------------")
         print("ACCESSIBILITY REVIEW SUMMARY")
         print("-------------------------")
-        print("Total pages:", results["pages"])
-        print("Checks performed:", len(results["checks"]))
-        print("Items needing review:", len(results["warnings"]))
+        print("Total pages:", results.pages)
+        print("Checks performed:", len(results.checks))
+        print("Items needing review:", len(results.warnings))
         print("Report saved to:", report_path)
 
         print("\nNote: This is an automated screening tool.")
         print("It does not certify ADA or WCAG compliance.")
+
+        return results
 
     except (FileNotFoundError, OSError) as error:
         print("Error opening PDF:", error)

@@ -1,0 +1,154 @@
+{
+    "file": "test.pdf",
+    "pages": 12,
+    "checks": [
+        {
+            "check": "Document title",
+            "status": "REVIEW",
+            "details": "No document title found."
+        },
+        {
+            "check": "Document language",
+            "status": "REVIEW",
+            "details": "No document language specified."
+        },
+        {
+            "check": "PDF structure",
+            "status": "FOUND",
+            "details": "Structure tree found. Tag quality needs review."
+        },
+        {
+            "check": "Page 1 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 1 images",
+            "status": "INFO",
+            "details": "No embedded image resources detected."
+        },
+        {
+            "check": "Page 2 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 2 images",
+            "status": "INFO",
+            "details": "No embedded image resources detected."
+        },
+        {
+            "check": "Page 3 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 3 images",
+            "status": "REVIEW",
+            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 4 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 4 images",
+            "status": "REVIEW",
+            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 5 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 5 images",
+            "status": "REVIEW",
+            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 6 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 6 images",
+            "status": "REVIEW",
+            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 7 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 7 images",
+            "status": "REVIEW",
+            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 8 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 8 images",
+            "status": "REVIEW",
+            "details": "3 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 9 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 9 images",
+            "status": "REVIEW",
+            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 10 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 10 images",
+            "status": "REVIEW",
+            "details": "2 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 11 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 11 images",
+            "status": "REVIEW",
+            "details": "1 image resource(s) found. Check whether meaningful images have alt text."
+        },
+        {
+            "check": "Page 12 text",
+            "status": "FOUND",
+            "details": "Extractable text found."
+        },
+        {
+            "check": "Page 12 images",
+            "status": "INFO",
+            "details": "No embedded image resources detected."
+        }
+    ],
+    "warnings": [
+        "No document title found.",
+        "No document language specified.",
+        "1 image resource(s) found. Check whether meaningful images have alt text.",
+        "1 image resource(s) found. Check whether meaningful images have alt text.",
+        "3 image resource(s) found. Check whether meaningful images have alt text.",
+        "3 image resource(s) found. Check whether meaningful images have alt text.",
+        "3 image resource(s) found. Check whether meaningful images have alt text.",
+        "3 image resource(s) found. Check whether meaningful images have alt text.",
+        "1 image resource(s) found. Check whether meaningful images have alt text.",
+        "2 image resource(s) found. Check whether meaningful images have alt text.",
+        "1 image resource(s) found. Check whether meaningful images have alt text."
+    ]
+}

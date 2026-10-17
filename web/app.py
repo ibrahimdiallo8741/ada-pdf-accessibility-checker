@@ -34,7 +34,7 @@ def process_pdf_scan(scan_id: str, content: bytes, filename: str):
         store.update_status(scan_id, status="COMPLETED", result=scan_result)
     except (pymupdf.FileDataError, PyPdfError, ValueError, TypeError, KeyError, AttributeError) as exc:
         store.update_status(scan_id, status="REJECTED", error=f"PDF parsing error ({type(exc).__name__}): {exc}")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         store.update_status(scan_id, status="REJECTED", error=f"Unexpected error ({type(exc).__name__}): {exc}")
 
 

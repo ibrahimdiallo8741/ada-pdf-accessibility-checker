@@ -386,6 +386,16 @@
       }
     }
 
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function renderResults(res) {
       document.getElementById('res-file').textContent = res.file_or_url;
       document.getElementById('metric-pages').textContent = res.pages;
@@ -402,14 +412,21 @@
         if (f.status === 'Issue') badgeClass = 'badge-issue';
         else if (f.status === 'Needs Human Review') badgeClass = 'badge-review';
 
+        const findingId = escapeHTML(f.finding_id);
+        const location = escapeHTML(f.input_location);
+        const wcag = escapeHTML(f.WCAG_criterion);
+        const status = escapeHTML(f.status);
+        const desc = escapeHTML(f.issue_description);
+        const rem = f.remediation_guidance ? escapeHTML(f.remediation_guidance) : '';
+
         tr.innerHTML = `
-          <td><strong>${f.finding_id}</strong></td>
-          <td>${f.input_location}</td>
-          <td><span style="font-size: 0.8rem; color: var(--text-muted);">${f.WCAG_criterion}</span></td>
-          <td><span class="status-badge ${badgeClass}">${f.status}</span></td>
+          <td><strong>${findingId}</strong></td>
+          <td>${location}</td>
+          <td><span style="font-size: 0.8rem; color: var(--text-muted);">${wcag}</span></td>
+          <td><span class="status-badge ${badgeClass}">${status}</span></td>
           <td>
-            <div>${f.issue_description}</div>
-            ${f.remediation_guidance ? `<div style="font-size: 0.8rem; color: #475569; margin-top: 0.25rem;"><em>Remediation:</em> ${f.remediation_guidance}</div>` : ''}
+            <div>${desc}</div>
+            ${rem ? `<div style="font-size: 0.8rem; color: #475569; margin-top: 0.25rem;"><em>Remediation:</em> ${rem}</div>` : ''}
           </td>
         `;
         tbody.appendChild(tr);
@@ -445,12 +462,15 @@
         summary.results.forEach((r, idx) => {
           const tr = document.createElement('tr');
           const badge = r.passed ? '<span class="status-badge badge-pass">PASS</span>' : '<span class="status-badge badge-issue">FAIL</span>';
+          const name = escapeHTML(r.name);
+          const reqRef = escapeHTML(r.requirement_ref || 'N/A');
+          const details = escapeHTML(r.details);
           tr.innerHTML = `
             <td>${idx + 1}</td>
             <td>${badge}</td>
-            <td><strong>${r.name}</strong></td>
-            <td><span style="font-size: 0.8rem; color: var(--text-muted);">${r.requirement_ref || 'N/A'}</span></td>
-            <td>${r.details}</td>
+            <td><strong>${name}</strong></td>
+            <td><span style="font-size: 0.8rem; color: var(--text-muted);">${reqRef}</span></td>
+            <td>${details}</td>
           `;
           tbody.appendChild(tr);
         });

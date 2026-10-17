@@ -103,7 +103,6 @@ ada-pdf-accessibility-checker/
 │   ├── storage.py            # In-memory scan state & results manager
 │   └── templates/
 ├── docs/                     # Project documentation directory
-│   
 │   ├── PROJECT_DOCUMENTATION.md
 │   ├── FUTURE_WORK.md
 │   ├── PROJECT_HANDOFF.md

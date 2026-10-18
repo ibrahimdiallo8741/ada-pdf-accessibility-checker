@@ -17,6 +17,8 @@ ada-pdf-accessibility-checker/
 ├── web/                        # Web Application & Delivery Layer
 │   ├── app.py                  # FastAPI server & REST API routes
 │   ├── storage.py              # In-memory scan job tracker with TTL expiration
+│   ├── cross_team_routes.py    # Cross-team System & Tester API routes
+│   ├── cross_team_storage.py   # In-memory registry for System & Tester sessions
 │   ├── templates/              # Jinja2 HTML templates
 │   │   └── index.html          # Web UI interface
 │   └── static/                 # Static delivery assets
@@ -24,6 +26,9 @@ ada-pdf-accessibility-checker/
 │       └── app.js              # Client-side upload, polling, & render logic
 ├── tests/                      # Automated Testing Subsystem
 │   ├── runner.py               # Acceptance test runner (AC-01 through AC-18)
+│   ├── test_roadmap_sections.py# Edge-case, security, and concurrency test suites
+│   ├── test_cross_team.py      # Cross-team System and Tester ConOps test suite
+│   ├── http_cross_tester.py    # Outbound HTTP test engine for target screening APIs
 │   └── fixtures/               # Curated PDF fixtures for deterministic testing
 │       ├── fixture_accessible.pdf
 │       ├── fixture_scanned.pdf
@@ -33,6 +38,7 @@ ada-pdf-accessibility-checker/
 │   ├── WCAG_CHECKS_REFERENCE.md# Check definitions, limits, and remediation catalog
 │   ├── DECISION_LOG.md         # Architecture Decision Records (ADRs)
 │   ├── ROADMAP.md              # Milestone tracking and future enhancements
+│   ├── CROSS_TEAM_TESTING_PLAN.md # Cross-team test execution plan & coverage rationale
 │   └── CLOUD_HOSTING_COMPARISON.md # Multi-vendor cloud hosting evaluation
 ├── pdf_checker.py              # Command-line interface (CLI) entry point
 ├── Dockerfile                  # Container definition for Cloud Run deployment
@@ -101,6 +107,11 @@ The web interface ([`web/app.py`](../web/app.py)) exposes an asynchronous REST A
 | `GET` | `/api/scans/{scan_id}/status` | Poll job execution state | None | `200 OK` → `{"scan_id": "...", "status": "running\|completed\|error"}` |
 | `GET` | `/api/scans/{scan_id}/results`| Fetch complete screening report | None | `200 OK` → `ScanResult` JSON payload |
 | `GET` / `POST` | `/api/test-runner` | Run automated acceptance test suite | None | `200 OK` → `TestSuiteSummary` JSON payload |
+| `POST` | `/system/test/setup` | Register and prepare test session for System under test | `{"session_id": "...", "setup": {}}` | `201 Created` → `{"session_id": "..."}` |
+| `GET` | `/system/test/report`| Fetch code coverage for session under test | `?session_id=...` | `200 OK` → Coverage report |
+| `POST` | `/tester/test/setup` | Initialize Tester session with target base URL | `{"target_url": "..."}` | `201 Created` → `{"session_id": "..."}` |
+| `POST` | `/tester/test/run`   | Execute test suite against target system | `{"session_id": "..."}` | `200 OK` → Full suite report & coverage |
+| `GET` | `/tester/test/report`| Fetch stored suite report after run | `?session_id=...` | `200 OK` → Stored suite report |
 | `GET` | `/docs` | Interactive Swagger / OpenAPI documentation | None | `200 OK` (Interactive UI) |
 
 ---

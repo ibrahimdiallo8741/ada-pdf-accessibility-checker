@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Annotated
 
 import pymupdf
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -10,6 +10,7 @@ from pypdf.errors import PyPdfError
 
 from core.checker import screen_pdf
 from tests.runner import run_automated_suite
+from web.cross_team_routes import system_router, tester_router
 from web.storage import store
 
 MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB per api.md
@@ -51,7 +52,10 @@ async def get_index():
     return HTMLResponse(content="<h1>ADA PDF Accessibility Checker API</h1><p>Visit <a href='/docs'>/docs</a></p>")
 
 
-@app.post("/api/scans/pdf", status_code=202, tags=["Scans"])
+api_router = APIRouter(tags=["Scans"])
+
+
+@api_router.post("/scans/pdf", status_code=202)
 async def start_pdf_scan(
     background_tasks: BackgroundTasks,
     file: Annotated[UploadFile, File()],
@@ -89,7 +93,7 @@ async def start_pdf_scan(
     )
 
 
-@app.post("/api/scans/web", status_code=422, tags=["Scans"])
+@api_router.post("/scans/web", status_code=422)
 async def start_web_scan(request: WebScanRequest):
     """Web scan endpoint (descoped for prototype per REQ-12 and FUTURE_WORK.md)."""
     return JSONResponse(
@@ -101,7 +105,7 @@ async def start_web_scan(request: WebScanRequest):
     )
 
 
-@app.get("/api/scans/{scan_id}/status", tags=["Scans"])
+@api_router.get("/scans/{scan_id}/status")
 async def get_scan_status(scan_id: str):
     """Returns the current processing status of a scan job (REQ-12, REQ-13, REQ-18)."""
     job = store.get_scan(scan_id)
@@ -113,7 +117,7 @@ async def get_scan_status(scan_id: str):
     return {"scan_id": job.scan_id, "status": job.status, "error": job.error}
 
 
-@app.get("/api/scans/{scan_id}/results", tags=["Scans"])
+@api_router.get("/scans/{scan_id}/results")
 async def get_scan_results(scan_id: str):
     """Retrieves completed accessibility findings and summary counts (REQ-06–REQ-10, REQ-17)."""
     job = store.get_scan(scan_id)
@@ -135,9 +139,19 @@ async def get_scan_results(scan_id: str):
     return job.result.to_dict()
 
 
-@app.get("/api/test-runner", tags=["Test Runner"])
-@app.post("/api/test-runner", tags=["Test Runner"])
+@api_router.get("/test-runner", tags=["Test Runner"])
+@api_router.post("/test-runner", tags=["Test Runner"])
 async def trigger_automated_tests():
     """Runs automated acceptance test suite against curated test fixtures (AC-01 through AC-18)."""
     summary = run_automated_suite()
     return summary.to_dict()
+
+
+# Mount Project API routes under both /api and /system/api (distinguishable base URLs)
+app.include_router(api_router, prefix="/api")
+app.include_router(api_router, prefix="/system/api")
+
+# Mount Cross-Team Testing Routers
+app.include_router(system_router, prefix="/system")
+app.include_router(system_router)  # root alias for /test/setup and /test/report
+app.include_router(tester_router, prefix="/tester")

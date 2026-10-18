@@ -7,10 +7,10 @@ Preliminary screening prototype evaluating PDF documents for potential accessibi
 ---
 ## Live Deployment
 
-|Access via|Main application|Testing endpoint|
-|----------|----------------|----------------|
-|Cloudflare|https://adacheck.deltadizzy.org|https://adacheck.deltadizzy.org/api/test-runner|
-|Google Cloud|https://ada-compliance-checker-295390844193.us-central1.run.app|https://ada-compliance-checker-295390844193.us-central1.run.app/api/test-runner|
+|Access via|Main application|Testing endpoint|System Base URL|Tester Base URL|
+|----------|----------------|----------------|---------------|---------------|
+|Cloudflare|https://adacheck.deltadizzy.org|https://adacheck.deltadizzy.org/api/test-runner|https://adacheck.deltadizzy.org/system|https://adacheck.deltadizzy.org/tester|
+|Google Cloud|https://ada-compliance-checker-295390844193.us-central1.run.app|https://ada-compliance-checker-295390844193.us-central1.run.app/api/test-runner|https://ada-compliance-checker-295390844193.us-central1.run.app/system|https://ada-compliance-checker-295390844193.us-central1.run.app/tester|
 
 
 ---
@@ -98,5 +98,6 @@ Consolidated architectural, technical, and compliance specifications in [`docs/`
 - [`WCAG_TAXONOMY.md`](docs/WCAG_TAXONOMY.md): Complete coverage taxonomy of all 50 WCAG 2.1 Level A & AA criteria (implemented, planned, out-of-scope, N/A).
 - [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–004) detailing scope, parser engine, hosting, and tooling choices.
 - [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–4) and planned post-prototype enhancements.
+- [`CROSS_TEAM_TESTING_PLAN.md`](docs/CROSS_TEAM_TESTING_PLAN.md): Step-by-step API test execution plan for self-testing and cross-testing under the shared testing ConOps.
 - [`CLOUD_HOSTING_COMPARISON.md`](docs/CLOUD_HOSTING_COMPARISON.md): Multi-vendor hosting assessment and free-tier trade-off evaluation.
 - [`AGENTS.md`](AGENTS.md): Contributor conventions, agent directives, and verification rules.

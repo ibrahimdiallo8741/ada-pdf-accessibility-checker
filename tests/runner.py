@@ -18,6 +18,12 @@ from tests.test_roadmap_sections import (
     test_scale_multipage,
     test_zero_byte_rejection,
 )
+from tests.test_cross_team import (
+    test_system_dual_mount_api,
+    test_system_setup_and_report_lifecycle,
+    test_tester_run_and_report_lifecycle,
+    test_tester_setup_target_communication,
+)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -283,6 +289,21 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
 
     p_api, d_api = test_api_contract_and_statuses()
     record_test("API Contract & HTTP Status Suite", p_api, d_api, "AC-10")
+
+    # --------------------------------------------------------------------------
+    # Tests for Cross-Team Testing ConOps (docs/student-facing-spec.md)
+    # --------------------------------------------------------------------------
+    p_sys, d_sys = test_system_setup_and_report_lifecycle()
+    record_test("Cross-Team System Role Lifecycle", p_sys, d_sys, "REQ-15, REQ-18")
+
+    p_dual, d_dual = test_system_dual_mount_api()
+    record_test("Cross-Team Dual-Mount API Conformity", p_dual, d_dual, "REQ-15")
+
+    p_tcomm, d_tcomm = test_tester_setup_target_communication()
+    record_test("Cross-Team Tester Communication Handling", p_tcomm, d_tcomm, "REQ-15")
+
+    p_trun, d_trun = test_tester_run_and_report_lifecycle()
+    record_test("Cross-Team Tester Execution & Coverage Suite", p_trun, d_trun, "REQ-15, REQ-18")
 
     # Dynamic Test: Screen any extra team-supplied PDFs in fixtures directory
     standard_fixtures = {"fixture_accessible.pdf", "fixture_scanned.pdf", "fixture_images.pdf"}

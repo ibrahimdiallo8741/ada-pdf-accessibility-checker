@@ -9,7 +9,7 @@
 | Milestone | Scope & Deliverables | Status | Verification Evidence |
 |---|---|---|---|
 | **Milestone 1: Core Screening Domain** | • Pure rule-based checks (`core/checks.py`)<br/>• Dual-engine coordinator (`core/checker.py`)<br/>• Strongly typed dataclasses (`core/models.py`)<br/>• Interactive CLI frontend (`pdf_checker.py`) | **Completed** | • CLI successfully screens multi-page PDFs and generates standardized JSON reports.<br/>• Verified against test fixtures `accessible_test.pdf` and `altair.pdf`. |
-| **Milestone 2: Automated Acceptance Testing** | • Acceptance test runner (`tests/runner.py`)<br/>• Curated test fixtures (`tests/fixtures/`)<br/>• Test case assertions (AC-01 through AC-18) | **Completed** | • Automated test suite passes 21/21 assertions (`uv run python -m tests.runner`).<br/>• Standardized `TestSuiteSummary` schema. |
+| **Milestone 2: Automated Acceptance Testing** | • Acceptance test runner (`tests/runner.py`)<br/>• Curated test fixtures (`tests/fixtures/`)<br/>• Test case assertions (AC-01 through AC-18) | **Completed** | • Automated test suite passes 25/25 assertions (`uv run python -m tests.runner`).<br/>• Standardized `TestSuiteSummary` schema. |
 | **Milestone 3: Web Application & UI** | • FastAPI asynchronous backend (`web/app.py`)<br/>• In-memory job tracking with 1h TTL (`web/storage.py`)<br/>• Responsive web UI with drag-and-drop (`web/templates/`, `web/static/`)<br/>• In-browser acceptance test trigger (`/api/test-runner`) | **Completed** | • Asynchronous upload, polling, and report download verified in browser.<br/>• Dual `GET`/`POST` support for automated test execution. |
 | **Milestone 4: Containerization & Cloud Deployment** | • Production containerization (`Dockerfile`)<br/>• Google Cloud Run serverless deployment<br/>• Cloudflare DNS & Full (Strict) SSL edge proxy<br/>• Edge caching for static web assets | **Completed** | • Cloud Run container boots with dynamic `${PORT:-8080}` and clean signal handling.<br/>• Cloudflare Universal SSL and caching active. |
 
@@ -69,7 +69,13 @@ To ensure all Acceptance Criteria (AC-01 through AC-18) and core Requirements (R
 - [x] **Job Eviction / TTL Automated Verification (AC-13)**: Unit test with simulated timestamps asserting that completed scan jobs older than 3600 seconds (1 hour) are evicted from memory.
 - [x] **API Contract & HTTP Status Suite**: Automated verification of HTTP responses: `202 Accepted` on upload, `200 OK` on polling/results, `404 Not Found` on unknown job IDs, and `422 Unprocessable Entity` on non-PDF uploads.
 
-### 3.4 Milestone-Specific Verification Suites
+### 3.4 Cross-Team Testing ConOps Verification (docs/student-facing-spec.md)
+- [x] **System Role Lifecycle**: Test verifying `POST /system/test/setup` creates and returns `session_id`, prevents duplicates (`409 Conflict`), and `GET /system/test/report` serves code coverage structure.
+- [x] **Dual-Mount API Conformity**: Test verifying project screening API is reachable under both `/api` and `/system/api` base URLs.
+- [x] **Tester Communication Handling**: Test asserting URL scheme validation (`400`) and target connection timeout/unreachable classification (`source: communication`).
+- [x] **Tester Execution & Coverage Suite**: Full async test executing T-01 through T-10, asserting outcomes, component coverage (4/4), and system coverage (10/10).
+
+### 3.5 Milestone-Specific Verification Suites
 - [ ] **Milestone 5 (Web Scanning)**: Mock HTTP fixtures evaluating accessible vs. inaccessible HTML DOM trees (validating form labels, heading hierarchy, skip navigation, and ARIA attributes).
 - [ ] **Milestone 6 (Structure Trees)**: Curated PDF fixtures with malformed tag hierarchies (e.g., `<Table>` lacking `<TR>`, skipped heading levels `<H1>` immediately followed by `<H3>`).
 - [ ] **Milestone 7 (Contrast Engine)**: Synthetic bitmap test fixtures with known RGB color pairs to verify contrast ratio formula accuracy ($21:1$, $4.5:1$, $3.0:1$, and failing ratios).

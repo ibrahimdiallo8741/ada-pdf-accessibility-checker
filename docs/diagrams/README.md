@@ -2,12 +2,15 @@
 
 This directory contains visual and text-based architectural and behavioral models of the ADA PDF Accessibility Checker application.
 
+> **Note**: Diagrams are defined in the standalone `.mmd` files in this directory as the single source of truth. Running `python3 scripts/sync_diagrams.py` automatically synchronizes any updates to `.mmd` files into this document.
+
 ---
 
 ## 1. System Architecture and Data Flow
 
 **Source**: [`architecture_diagram.mmd`](architecture_diagram.mmd) (updates [`architecture_diagram.jpg`](architecture_diagram.jpg))
 
+<!-- BEGIN:architecture_diagram -->
 ```mermaid
 flowchart TD
     %% User / Actor
@@ -30,7 +33,7 @@ flowchart TD
     subgraph DocAnalysis ["Document Analysis"]
         direction LR
         RuleChecker["📝 <b>Deterministic WCAG Rule Checker</b><br/>(2.4.2 Title, 3.1.1 Lang, 1.3.1 StructTree,<br/>1.4.5 Page Text, 1.1.1 Image Discovery)"]
-        AIAnalyzer["🧠 <b>AI-Assisted Analyzer</b><br/>(Deferred to Milestone 8;<br/>Semantic & Contextual Alt-Text Checks)"]
+        AIAnalyzer["🧠 <b>AI-Assisted Analyzer</b><br/>(Deferred to future milestone;<br/>Semantic & Contextual Alt-Text Checks)"]
     end
 
     ExtractedContent --> RuleChecker
@@ -67,6 +70,7 @@ flowchart TD
 
     style DocAnalysis fill:#fff5f5,stroke:#e57373,stroke-width:2px,stroke-dasharray: 6 6;
 ```
+<!-- END:architecture_diagram -->
 
 ---
 
@@ -74,17 +78,16 @@ flowchart TD
 
 **Source**: [`scan_workflow.mmd`](scan_workflow.mmd) (updates [`Behavioral_information_model.png`](Behavioral_information_model.png))
 
+<!-- BEGIN:scan_workflow -->
 ```mermaid
 flowchart TD
-    Start["User submits input<br/>(PDF upload or Web URL)"]
+    Start["User submits input<br/>(PDF upload)"]
     ValCheck{"Validate input<br/>(Size <= 25MB, format, header)"}
     ErrStop["<b>Show error / reason</b><br/>Stop scan (Return 400, 413, 415, or 422)"]
     TypeCheck{"Identify input type"}
     WebBranch["<b>Webpage input</b><br/>Return 422 (Descoped for prototype)"]
     Extract["<b>Extract accessible content</b><br/>(In-memory PyMuPDF & pypdf byte stream)"]
     RunRules["<b>Run deterministic WCAG checks</b><br/>(Title, Lang, StructTree, Text, Images)"]
-    RunAI["<b>AI-assisted checks</b><br/>(Deferred to Milestone 8)"]
-    AIFallback["<b>Record limitation</b><br/>Continue deterministic evaluation only"]
     Classify["<b>Classify each finding</b><br/>(Pass | Issue | Needs Human Review | Could Not Evaluate)"]
     Remed["<b>Generate remediation guidance</b><br/>(Actionable steps for non-passing items)"]
     GenReport["<b>Generate final report + scan summary</b><br/>(Findings, counts, and zero-disk cache)"]
@@ -95,10 +98,7 @@ flowchart TD
     TypeCheck -->|Webpage| WebBranch
     TypeCheck -->|PDF| Extract
     Extract --> RunRules
-    RunRules --> RunAI
-    RunAI -.->|AI deferred/offline| AIFallback
-    RunAI --> Classify
-    AIFallback --> Classify
+    RunRules --> Classify
     Classify --> Remed
     Remed --> GenReport
 
@@ -112,6 +112,7 @@ flowchart TD
     class ErrStop,WebBranch,AIFallback redStop;
     class RunRules,RunAI greenStep;
 ```
+<!-- END:scan_workflow -->
 
 ---
 
@@ -119,6 +120,7 @@ flowchart TD
 
 **Source**: [`finding_data_model.mmd`](finding_data_model.mmd)
 
+<!-- BEGIN:finding_data_model -->
 ```mermaid
 classDiagram
     class ScanReport {
@@ -154,6 +156,7 @@ classDiagram
     ScanReport *-- ScanSummary
     ScanReport *-- Finding
 ```
+<!-- END:finding_data_model -->
 
 ---
 
@@ -161,35 +164,40 @@ classDiagram
 
 **Source**: [`scan_state_model.mmd`](scan_state_model.mmd)
 
+<!-- BEGIN:scan_state_model -->
 ```mermaid
-stateDiagram-v2
-    direction LR
+flowchart TD
+    Submitted["<b>SUBMITTED</b><br/>(POST /api/scans/pdf)"]
+    Validating["<b>VALIDATING</b><br/>(Inspect size <= 25MB, MIME, PDF magic bytes)"]
+    Rejected["<b>REJECTED</b><br/>(Show error reason: 400, 413, 415)"]
+    Analyzing["<b>ANALYZING</b><br/>(Run deterministic WCAG rule checks)"]
+    PartialFail["<b>Record Limitation</b><br/>(Partial failure fallback: e.g. unparseable tags)"]
+    GenReport["<b>GENERATING REPORT</b><br/>(Summarize findings, arithmetic counts & remediation)"]
+    Completed["<b>COMPLETED</b><br/>(Results available in-memory, 1-hour TTL)"]
 
-    [*] --> SUBMITTED: POST /api/scans/pdf
-    SUBMITTED --> VALIDATING: Read multipart bytes
+    Submitted --> Validating
+    Validating -->|"Invalid input"| Rejected
+    Validating -->|"Valid input (202 Accepted)"| Analyzing
+    Analyzing -.->|"Partial failure"| PartialFail
+    PartialFail -.-> Analyzing
+    Analyzing -->|"All checks completed"| GenReport
+    GenReport -->|"Report stored"| Completed
 
-    VALIDATING --> REJECTED: Invalid (0B, >25MB, corrupted header, non-PDF)
-    VALIDATING --> ANALYZING: Valid in-memory stream (HTTP 202 Accepted)
+    %% Styling classes matching architecture_diagram.mmd and scan_workflow.mmd conventions
+    classDef actorStyle fill:#cbe2f8,stroke:#6ca0dc,stroke-width:2px,color:#1e3a8a;
+    classDef validationStyle fill:#cdeed3,stroke:#7cc88b,stroke-width:2px,color:#064e3b;
+    classDef analysisStyle fill:#fecdd2,stroke:#f48fb1,stroke-width:2px,color:#831843;
+    classDef findingStyle fill:#fef0b8,stroke:#ebd069,stroke-width:2px,color:#78350f;
+    classDef apiStyle fill:#dfd2f7,stroke:#a88ee8,stroke-width:2px,color:#4c1d95;
+    classDef storageStyle fill:#bbf2c8,stroke:#5bbd70,stroke-width:2px,color:#064e3b;
+    classDef errorStyle fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#991b1b;
 
-    state ANALYZING {
-        [*] --> EvaluatingRules
-        EvaluatingRules --> SummarizingCounts
-    }
-
-    ANALYZING --> REJECTED: File parsing or decryption failure
-    ANALYZING --> GENERATING_REPORT: All checks completed
-    GENERATING_REPORT --> COMPLETED: Stored in memory with 1h TTL
-
-    COMPLETED --> [*]
-    REJECTED --> [*]
-
-    classDef submitted fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-    classDef active fill:#e0e7ff,stroke:#6366f1,color:#312e81;
-    classDef success fill:#dcfce7,stroke:#22c55e,color:#14532d;
-    classDef fail fill:#fee2e2,stroke:#ef4444,color:#991b1b;
-
-    class SUBMITTED submitted;
-    class VALIDATING,ANALYZING,GENERATING_REPORT active;
-    class COMPLETED success;
-    class REJECTED fail;
+    class Submitted actorStyle;
+    class Validating validationStyle;
+    class Analyzing analysisStyle;
+    class Rejected errorStyle;
+    class PartialFail findingStyle;
+    class GenReport apiStyle;
+    class Completed storageStyle;
 ```
+<!-- END:scan_state_model -->

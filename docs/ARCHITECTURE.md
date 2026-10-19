@@ -38,7 +38,9 @@ ada-pdf-accessibility-checker/
 │   ├── WCAG_CHECKS_REFERENCE.md# Check definitions, limits, and remediation catalog
 │   ├── DECISION_LOG.md         # Architecture Decision Records (ADRs)
 │   ├── ROADMAP.md              # Milestone tracking and future enhancements
+│   ├── INTRA_POD_SPECIFICATION.md # Shared pod specification, models, interfaces & limits
 │   ├── CROSS_TEAM_TESTING_PLAN.md # Cross-team test execution plan & coverage rationale
+│   ├── CODE_COVERAGE_OPTIONS.md   # Evaluation of code coverage options for System role
 │   └── CLOUD_HOSTING_COMPARISON.md # Multi-vendor cloud hosting evaluation
 ├── pdf_checker.py              # Command-line interface (CLI) entry point
 ├── Dockerfile                  # Container definition for Cloud Run deployment

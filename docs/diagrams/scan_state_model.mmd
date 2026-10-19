@@ -1,0 +1,30 @@
+stateDiagram-v2
+    direction LR
+
+    [*] --> SUBMITTED: POST /api/scans/pdf
+    SUBMITTED --> VALIDATING: Read multipart bytes
+
+    VALIDATING --> REJECTED: Invalid (0B, >25MB, corrupted header, non-PDF)
+    VALIDATING --> ANALYZING: Valid in-memory stream (HTTP 202 Accepted)
+
+    state ANALYZING {
+        [*] --> EvaluatingRules
+        EvaluatingRules --> SummarizingCounts
+    }
+
+    ANALYZING --> REJECTED: File parsing or decryption failure
+    ANALYZING --> GENERATING_REPORT: All checks completed
+    GENERATING_REPORT --> COMPLETED: Stored in memory with 1h TTL
+
+    COMPLETED --> [*]
+    REJECTED --> [*]
+
+    classDef submitted fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+    classDef active fill:#e0e7ff,stroke:#6366f1,color:#312e81;
+    classDef success fill:#dcfce7,stroke:#22c55e,color:#14532d;
+    classDef fail fill:#fee2e2,stroke:#ef4444,color:#991b1b;
+
+    class SUBMITTED submitted;
+    class VALIDATING,ANALYZING,GENERATING_REPORT active;
+    class COMPLETED success;
+    class REJECTED fail;

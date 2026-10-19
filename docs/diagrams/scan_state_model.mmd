@@ -1,0 +1,33 @@
+flowchart TD
+    Submitted["<b>SUBMITTED</b><br/>(POST /api/scans/pdf)"]
+    Validating["<b>VALIDATING</b><br/>(Inspect size <= 25MB, MIME, PDF magic bytes)"]
+    Rejected["<b>REJECTED</b><br/>(Show error reason: 400, 413, 415)"]
+    Analyzing["<b>ANALYZING</b><br/>(Run deterministic WCAG rule checks)"]
+    PartialFail["<b>Record Limitation</b><br/>(Partial failure fallback: e.g. unparseable tags)"]
+    GenReport["<b>GENERATING REPORT</b><br/>(Summarize findings, arithmetic counts & remediation)"]
+    Completed["<b>COMPLETED</b><br/>(Results available in-memory, 1-hour TTL)"]
+
+    Submitted --> Validating
+    Validating -->|"Invalid input"| Rejected
+    Validating -->|"Valid input (202 Accepted)"| Analyzing
+    Analyzing -.->|"Partial failure"| PartialFail
+    PartialFail -.-> Analyzing
+    Analyzing -->|"All checks completed"| GenReport
+    GenReport -->|"Report stored"| Completed
+
+    %% Styling classes matching architecture_diagram.mmd and scan_workflow.mmd conventions
+    classDef actorStyle fill:#cbe2f8,stroke:#6ca0dc,stroke-width:2px,color:#1e3a8a;
+    classDef validationStyle fill:#cdeed3,stroke:#7cc88b,stroke-width:2px,color:#064e3b;
+    classDef analysisStyle fill:#fecdd2,stroke:#f48fb1,stroke-width:2px,color:#831843;
+    classDef findingStyle fill:#fef0b8,stroke:#ebd069,stroke-width:2px,color:#78350f;
+    classDef apiStyle fill:#dfd2f7,stroke:#a88ee8,stroke-width:2px,color:#4c1d95;
+    classDef storageStyle fill:#bbf2c8,stroke:#5bbd70,stroke-width:2px,color:#064e3b;
+    classDef errorStyle fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#991b1b;
+
+    class Submitted actorStyle;
+    class Validating validationStyle;
+    class Analyzing analysisStyle;
+    class Rejected errorStyle;
+    class PartialFail findingStyle;
+    class GenReport apiStyle;
+    class Completed storageStyle;

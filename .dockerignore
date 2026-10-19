@@ -13,8 +13,7 @@ __pycache__/
 
 # Local data & test artifacts
 *.json
-tests/fixtures/*.pdf
-!tests/fixtures/fixture_*.pdf
+!tests/fixtures/*.pdf
 
 # Documentation & plan artifacts
 docs/

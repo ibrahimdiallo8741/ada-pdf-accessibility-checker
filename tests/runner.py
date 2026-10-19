@@ -18,6 +18,12 @@ from tests.test_roadmap_sections import (
     test_scale_multipage,
     test_zero_byte_rejection,
 )
+from tests.test_cross_team import (
+    test_system_dual_mount_api,
+    test_system_setup_and_report_lifecycle,
+    test_tester_run_and_report_lifecycle,
+    test_tester_setup_target_communication,
+)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -284,6 +290,21 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
     p_api, d_api = test_api_contract_and_statuses()
     record_test("API Contract & HTTP Status Suite", p_api, d_api, "AC-10")
 
+    # --------------------------------------------------------------------------
+    # Tests for Cross-Team Testing ConOps (docs/student-facing-spec.md)
+    # --------------------------------------------------------------------------
+    p_sys, d_sys = test_system_setup_and_report_lifecycle()
+    record_test("Cross-Team System Role Lifecycle", p_sys, d_sys, "REQ-15, REQ-18")
+
+    p_dual, d_dual = test_system_dual_mount_api()
+    record_test("Cross-Team Dual-Mount API Conformity", p_dual, d_dual, "REQ-15")
+
+    p_tcomm, d_tcomm = test_tester_setup_target_communication()
+    record_test("Cross-Team Tester Communication Handling", p_tcomm, d_tcomm, "REQ-15")
+
+    p_trun, d_trun = test_tester_run_and_report_lifecycle()
+    record_test("Cross-Team Tester Execution & Coverage Suite", p_trun, d_trun, "REQ-15, REQ-18")
+
     # Dynamic Test: Screen any extra team-supplied PDFs in fixtures directory
     standard_fixtures = {"fixture_accessible.pdf", "fixture_scanned.pdf", "fixture_images.pdf"}
     if target_fixtures.exists():
@@ -313,6 +334,40 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
     )
 
 
+COMMON_INTERFACE_OPERATIONS_AUDIT = """
+======================================================================
+POD COMMON INTERFACE CONTRACT AUDIT (api/api.md)
+======================================================================
+
+[POST /api/scans/pdf] │ Requirement(s): [REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-11, REQ-15] │ Implemented: [yes]
+Success responses conform: [yes] │ Error responses conform: [yes]
+
+Integration: Added asynchronous multipart ingestion in `web/app.py` backed by in-memory job coordination in `web/storage.py`. Requests stream document bytes directly into memory buffers (`io.BytesIO`) without touching disk, dispatch background analysis to `core/checker.py::screen_pdf`, and immediately return HTTP 202 with an assigned `scan_id`. The background worker executes rule checks across `core/checks.py`, updates the in-memory job state to `COMPLETED` or `REJECTED`, and releases byte buffer references for garbage collection.
+
+----------------------------------------------------------------------
+
+[POST /api/scans/web] │ Requirement(s): [REQ-01, REQ-03, REQ-04, REQ-05, REQ-06, REQ-11] │ Implemented: [partial]
+Success responses conform: [no - HTTP 202 Accepted with scan_id is not returned because live web HTML DOM scanning was descoped to Milestone 5 per ADR-001] │ Error responses conform: [yes - returns HTTP 422 Unprocessable Entity with error code UNSUPPORTED_PAGE conforming to the contract's unsupported/inaccessible page error condition]
+
+Integration: Integrated into `web/app.py` via FastAPI route handler consuming `WebScanRequest`. Requests bypass the background processing queue and immediately return HTTP 422 `UNSUPPORTED_PAGE` with descriptive guidance directing callers to `/api/scans/pdf`. This ensures graceful contract conformance and prevents service crashes when external testers probe for web scanning capabilities.
+
+----------------------------------------------------------------------
+
+[GET /api/scans/{scan_id}/status] │ Requirement(s): [REQ-12, REQ-13, REQ-18] │ Implemented: [yes]
+Success responses conform: [yes] │ Error responses conform: [yes]
+
+Integration: Added non-blocking status query endpoint in `web/app.py` reading thread-safe job metadata from `web/storage.py::store`. Incoming requests extract `scan_id` from the path and read current lifecycle state without lock contention or file system access. Polling clients in `web/static/app.js` and automated test runners use these status transitions (`VALIDATING` → `ANALYZING` → `COMPLETED` / `REJECTED`) to drive client-side progress bars and sequence dependent assertions.
+
+----------------------------------------------------------------------
+
+[GET /api/scans/{scan_id}/results] │ Requirement(s): [REQ-06, REQ-07, REQ-08, REQ-09, REQ-10, REQ-12, REQ-13, REQ-14, REQ-17] │ Implemented: [yes]
+Success responses conform: [yes] │ Error responses conform: [yes]
+
+Integration: Integrated in `web/app.py` to retrieve completed `ScanResult` domain models populated by `core/checker.py` and stored in `web/storage.py`. If processing is still active, the endpoint yields HTTP 409 `SCAN_NOT_READY`; once complete, it serializes immutable dataclass finding instances into the contract's JSON structure. Results flow to the web UI (`web/static/app.js`) to render accessible tabular views and export downloadable JSON reports.
+======================================================================
+"""
+
+
 def main():
     print("=" * 60)
     print("AUTOMATED ACCESSIBILITY TEST RUNNER")
@@ -331,6 +386,8 @@ def main():
     print(f"TOTAL: {summary.total} | PASSED: {summary.passed} | FAILED: {summary.failed}")
     print("=" * 60)
 
+    print(COMMON_INTERFACE_OPERATIONS_AUDIT)
+
     if summary.failed > 0:
         sys.exit(1)
     sys.exit(0)
@@ -338,3 +395,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

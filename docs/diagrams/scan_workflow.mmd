@@ -1,0 +1,31 @@
+flowchart TD
+    Start["User submits input<br/>(PDF upload)"]
+    ValCheck{"Validate input<br/>(Size <= 25MB, format, header)"}
+    ErrStop["<b>Show error / reason</b><br/>Stop scan (Return 400, 413, 415, or 422)"]
+    TypeCheck{"Identify input type"}
+    WebBranch["<b>Webpage input</b><br/>Return 422 (Descoped for prototype)"]
+    Extract["<b>Extract accessible content</b><br/>(In-memory PyMuPDF & pypdf byte stream)"]
+    RunRules["<b>Run deterministic WCAG checks</b><br/>(Title, Lang, StructTree, Text, Images)"]
+    Classify["<b>Classify each finding</b><br/>(Pass | Issue | Needs Human Review | Could Not Evaluate)"]
+    Remed["<b>Generate remediation guidance</b><br/>(Actionable steps for non-passing items)"]
+    GenReport["<b>Generate final report + scan summary</b><br/>(Findings, counts, and zero-disk cache)"]
+
+    Start --> ValCheck
+    ValCheck -->|Invalid| ErrStop
+    ValCheck -->|Valid| TypeCheck
+    TypeCheck -->|Webpage| WebBranch
+    TypeCheck -->|PDF| Extract
+    Extract --> RunRules
+    RunRules --> Classify
+    Classify --> Remed
+    Remed --> GenReport
+
+    classDef blueBox fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a;
+    classDef yellowCond fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#78350f;
+    classDef redStop fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#991b1b;
+    classDef greenStep fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d;
+
+    class Start,TypeCheck,Extract,Classify,Remed,GenReport blueBox;
+    class ValCheck yellowCond;
+    class ErrStop,WebBranch,AIFallback redStop;
+    class RunRules,RunAI greenStep;

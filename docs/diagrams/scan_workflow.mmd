@@ -1,13 +1,11 @@
 flowchart TD
-    Start["User submits input<br/>(PDF upload or Web URL)"]
+    Start["User submits input<br/>(PDF upload)"]
     ValCheck{"Validate input<br/>(Size <= 25MB, format, header)"}
     ErrStop["<b>Show error / reason</b><br/>Stop scan (Return 400, 413, 415, or 422)"]
     TypeCheck{"Identify input type"}
     WebBranch["<b>Webpage input</b><br/>Return 422 (Descoped for prototype)"]
     Extract["<b>Extract accessible content</b><br/>(In-memory PyMuPDF & pypdf byte stream)"]
     RunRules["<b>Run deterministic WCAG checks</b><br/>(Title, Lang, StructTree, Text, Images)"]
-    RunAI["<b>AI-assisted checks</b><br/>(Deferred to Milestone 8)"]
-    AIFallback["<b>Record limitation</b><br/>Continue deterministic evaluation only"]
     Classify["<b>Classify each finding</b><br/>(Pass | Issue | Needs Human Review | Could Not Evaluate)"]
     Remed["<b>Generate remediation guidance</b><br/>(Actionable steps for non-passing items)"]
     GenReport["<b>Generate final report + scan summary</b><br/>(Findings, counts, and zero-disk cache)"]
@@ -18,10 +16,7 @@ flowchart TD
     TypeCheck -->|Webpage| WebBranch
     TypeCheck -->|PDF| Extract
     Extract --> RunRules
-    RunRules --> RunAI
-    RunAI -.->|AI deferred/offline| AIFallback
-    RunAI --> Classify
-    AIFallback --> Classify
+    RunRules --> Classify
     Classify --> Remed
     Remed --> GenReport
 

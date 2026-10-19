@@ -2,7 +2,7 @@ stateDiagram-v2
     direction LR
 
     [*] --> SUBMITTED: POST /api/scans/pdf
-    SUBMITTED --> VALIDATING: Read multipart bytes
+    SUBMITTED --> VALIDATING: Read bytes
 
     VALIDATING --> REJECTED: Invalid (0B, >25MB, corrupted header, non-PDF)
     VALIDATING --> ANALYZING: Valid in-memory stream (HTTP 202 Accepted)

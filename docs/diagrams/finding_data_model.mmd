@@ -1,0 +1,33 @@
+classDiagram
+    class ScanReport {
+        +string scan_id
+        +string file
+        +int pages
+        +ScanSummary summary
+        +List~Finding~ findings
+        +to_dict() dict
+    }
+
+    class ScanSummary {
+        +int checks
+        +int passed
+        +int issues
+        +int human_review
+        +int could_not_evaluate
+        +to_dict() dict
+    }
+
+    class Finding {
+        +string finding_id
+        +string input_location
+        +string issue_description
+        +string WCAG_criterion
+        +string analysis_method
+        +string status
+        +string remediation_guidance
+        +string additional_details
+        +to_dict() dict
+    }
+
+    ScanReport *-- ScanSummary
+    ScanReport *-- Finding

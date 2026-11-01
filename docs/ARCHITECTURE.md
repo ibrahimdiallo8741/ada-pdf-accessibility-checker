@@ -12,22 +12,26 @@ The repository is organized into distinct, decoupled subsystems separating scree
 ada-pdf-accessibility-checker/
 ├── core/                       # Core Screening Domain (Engine & Rules)
 │   ├── models.py               # Strongly typed dataclasses & JSON serialization
-│   ├── checks.py               # Pure, rule-based screening evaluators
-│   └── checker.py              # Screening coordinator (dual-engine coordinator)
+│   ├── checks.py               # Pure, rule-based PDF screening evaluators
+│   ├── checker.py              # PDF screening coordinator (PyMuPDF + pypdf)
+│   ├── web_checks.py           # Pure, rule-based HTML DOM screening evaluators
+│   ├── web_checker.py          # Webpage screening coordinator (HTMLParser)
+│   └── web_fetcher.py          # In-memory async HTTP fetcher with SSRF protection
 ├── web/                        # Web Application & Delivery Layer
-│   ├── app.py                  # FastAPI server & REST API routes
+│   ├── app.py                  # FastAPI server & REST API routes (PDF & Web)
 │   ├── storage.py              # In-memory scan job tracker with TTL expiration
 │   ├── cross_team_routes.py    # Cross-team System & Tester API routes
 │   ├── cross_team_storage.py   # In-memory registry for System & Tester sessions
 │   ├── templates/              # Jinja2 HTML templates
-│   │   └── index.html          # Web UI interface
+│   │   └── index.html          # Dual-screening Web UI portal (PDF & Web)
 │   └── static/                 # Static delivery assets
 │       ├── style.css           # UI styling & accessibility themes
-│       └── app.js              # Client-side upload, polling, & render logic
+│       └── app.js              # Client-side upload, URL scan, polling, & render logic
 ├── tests/                      # Automated Testing Subsystem
 │   ├── runner.py               # Acceptance test runner (AC-01 through AC-18)
 │   ├── test_roadmap_sections.py# Edge-case, security, and concurrency test suites
 │   ├── test_cross_team.py      # Cross-team System and Tester ConOps test suite
+│   ├── test_web_scanner.py     # In-memory HTML fixtures and SSRF acceptance tests
 │   ├── http_cross_tester.py    # Outbound HTTP test engine for target screening APIs
 │   └── fixtures/               # Curated PDF fixtures for deterministic testing
 │       ├── fixture_accessible.pdf

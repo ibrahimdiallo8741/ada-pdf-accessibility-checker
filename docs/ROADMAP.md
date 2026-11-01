@@ -17,13 +17,14 @@
 
 ## 2. Post-Prototype Evolution Milestones
 
-### Milestone 5: Webpage Accessibility Ingestion & Screening
-- **Objective**: Re-expand the project scope to evaluate live web URLs and HTML DOM trees alongside PDF documents (potentially incorporated into the prototype if time permits).
+### Milestone 5: Webpage Accessibility Ingestion & Screening (Completed)
+- **Objective**: Re-expand the project scope to evaluate live web URLs and HTML DOM trees alongside PDF documents.
 - **Key Capabilities**:
-  - Headless browser rendering integration (`Playwright` / `axe-core`) or lightweight HTML/DOM parser for live web URL evaluation.
-  - Unified reporting schema accommodating both PDF and webpage accessibility findings.
+  - In-memory streaming HTML/DOM parser (`html.parser.HTMLParser`) for live web URL evaluation (`POST /api/scans/web`).
+  - Strict SSRF guarding against loopback, link-local, and private subnets (`core/web_fetcher.py`).
+  - Unified reporting schema accommodating both PDF and webpage accessibility findings (`core/models.py`).
   - Dual ingestion interface in the web portal (URL input field alongside PDF file drag-and-drop).
-  - Automated HTML WCAG 2.1 AA checks: document title, language tags, image `alt` attributes, heading hierarchy (`<h1>`–`<h6>`), form input labels, and ARIA landmark roles.
+  - Automated HTML WCAG 2.1 AA checks: document title (`2.4.2`), language tags (`3.1.1`), image `alt` attributes (`1.1.1`), heading hierarchy (`1.3.1`), form input labels (`1.3.1`/`4.1.2`), and bypass landmarks / skip links (`2.4.1`).
 
 ### Milestone 6: Deep Semantic Structure Tree Traversal
 - **Objective**: Expand `/StructTreeRoot` validation from simple existence checking to full hierarchical tree parsing.
@@ -76,7 +77,7 @@ To ensure all Acceptance Criteria (AC-01 through AC-18) and core Requirements (R
 - [x] **Tester Execution & Coverage Suite**: Full async test executing T-01 through T-10, asserting outcomes, component coverage (4/4), and system coverage (10/10).
 
 ### 3.5 Milestone-Specific Verification Suites
-- [ ] **Milestone 5 (Web Scanning)**: Mock HTTP fixtures evaluating accessible vs. inaccessible HTML DOM trees (validating form labels, heading hierarchy, skip navigation, and ARIA attributes).
+- [x] **Milestone 5 (Web Scanning)**: Mock HTTP fixtures evaluating accessible vs. inaccessible HTML DOM trees (validating form labels, heading hierarchy, skip navigation, and ARIA attributes in `tests/test_web_scanner.py`).
 - [ ] **Milestone 6 (Structure Trees)**: Curated PDF fixtures with malformed tag hierarchies (e.g., `<Table>` lacking `<TR>`, skipped heading levels `<H1>` immediately followed by `<H3>`).
 - [ ] **Milestone 7 (Contrast Engine)**: Synthetic bitmap test fixtures with known RGB color pairs to verify contrast ratio formula accuracy ($21:1$, $4.5:1$, $3.0:1$, and failing ratios).
 - [ ] **Milestone 8 (AI Heuristic Isolation)**: Mock AI harness testing fallback behavior when cloud AI endpoints time out or fail, asserting that deterministic checks complete without disruption.

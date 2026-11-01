@@ -93,3 +93,18 @@
 | `TEXT_001` | `Issue` | Page lacks digital text layer | Run Optical Character Recognition (OCR) on this scanned page to generate a selectable text layer for assistive technology. |
 | `IMG_001` | `Needs Human Review` | Image resources discovered | Review images on this page to ensure meaningful images have descriptive alternative text (/Alt) and decorative images are marked as artifacts. |
 | `*` | `Could Not Evaluate` | Parsing exception / encryption | Ensure the PDF file is unencrypted, valid, and not password protected, then retry screening. |
+
+---
+
+## 4. Web Checks & Remediation Catalog (Milestone 5)
+
+| Rule ID | WCAG Criterion | Finding Status | Condition | Standard Remediation Text |
+|---|---|---|---|---|
+| `WEB_TITLE_001` | **2.4.2** Page Titled (Level A) | `Issue` | `<title>` missing or empty | Add a descriptive `<title>` element inside the `<head>` section of the HTML document. |
+| `WEB_LANG_001` | **3.1.1** Language of Page (Level A) | `Issue` | `lang` attribute missing on `<html>` | Specify the primary natural language using the `lang` attribute on the `<html>` root element (e.g. `<html lang="en">`). |
+| `WEB_IMG_001` | **1.1.1** Non-text Content (Level A) | `Issue` | One or more `<img>` tags lack `alt` attribute | Ensure every `<img>` element contains an `alt` attribute. Provide concise descriptions for informative images and `alt=""` for decorative images. |
+| `WEB_IMG_001` | **1.1.1** Non-text Content (Level A) | `Needs Human Review` | All images contain `alt` attribute | Review image descriptions to confirm alternative text accurately conveys the image's function or intent. |
+| `WEB_HEAD_001` | **1.3.1** Info and Relationships (Level A) | `Issue` | No `<h1>` or skipped heading levels | Structure page content with a single primary `<h1>` and avoid skipping heading levels (e.g. nest `<h2>` before `<h3>`). |
+| `WEB_FORM_001` | **1.3.1** & **4.1.2** (Level A) | `Issue` | Form control lacks programmatic label | Provide programmatic labels for all form controls using `<label for="id">`, `aria-label`, or `aria-labelledby`. |
+| `WEB_SKIP_001` | **2.4.1** Bypass Blocks (Level A) | `Needs Human Review` | Lacks `<main>` landmark and skip link | Provide a skip-to-content link at the beginning of the body or declare a semantic `<main>` landmark region. |
+

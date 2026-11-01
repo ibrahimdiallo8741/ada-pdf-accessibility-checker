@@ -1,6 +1,6 @@
-# ADA PDF Accessibility Checker
+# ADA Accessibility Checker (PDF & Web)
 
-Preliminary screening prototype evaluating PDF documents for potential accessibility issues aligned with ADA Title II and WCAG 2.1 Level AA.
+Preliminary screening prototype evaluating PDF documents and public webpage URLs for potential accessibility issues aligned with ADA Title II and WCAG 2.1 Level AA.
 
 > **Disclaimer:** This tool provides automated preliminary screening checks. It is **not** an official ADA or WCAG compliance certification.
 
@@ -96,8 +96,8 @@ Consolidated architectural, technical, and compliance specifications in [`docs/`
 - [`ARCHITECTURE.md`](docs/ARCHITECTURE.md): System design, component structure, data models, REST API, privacy invariants, and Cloud Run + Cloudflare topology.
 - [`WCAG_CHECKS_REFERENCE.md`](docs/WCAG_CHECKS_REFERENCE.md): Technical check definitions, WCAG 2.1 AA citations, boundaries, status enums, and remediation guidance catalog.
 - [`WCAG_TAXONOMY.md`](docs/WCAG_TAXONOMY.md): Complete coverage taxonomy of all 50 WCAG 2.1 Level A & AA criteria (implemented, planned, out-of-scope, N/A).
-- [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–004) detailing scope, parser engine, hosting, and tooling choices.
-- [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–4) and planned post-prototype enhancements.
+- [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–005) detailing scope, parser engine, hosting, tooling, and web URL screening choices.
+- [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–5 completed) and planned post-prototype enhancements.
 - [`INTRA_POD_SPECIFICATION.md`](docs/INTRA_POD_SPECIFICATION.md): Intra-pod system specification, models, interfaces, preparation/cleanup ConOps, and limitations.
 - [`CROSS_TEAM_TESTING_PLAN.md`](docs/CROSS_TEAM_TESTING_PLAN.md): Step-by-step API test execution plan for self-testing and cross-testing under the shared testing ConOps.
 - [`CODE_COVERAGE_OPTIONS.md`](docs/CODE_COVERAGE_OPTIONS.md): Evaluation of real-time code coverage instrumentation options for the System test role.

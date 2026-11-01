@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 from typing import Annotated
 
@@ -6,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, FastAPI, File, HTTPException, Up
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from pypdf import PdfReader
 from pypdf.errors import PyPdfError
 
 from core.checker import screen_pdf
@@ -62,12 +64,14 @@ async def start_pdf_scan(
 ):
     """Submits a PDF for asynchronous accessibility screening (REQ-02, REQ-03, REQ-12, REQ-15)."""
     # 1. Validate file format / MIME
-    filename = file.filename or "document.pdf"
-    if not filename.lower().endswith(".pdf"):
+    raw_filename = (file.filename or "").lower()
+    content_type = (file.content_type or "").lower()
+    if (content_type and content_type not in ("application/pdf", "application/x-pdf", "application/octet-stream")) or (raw_filename and not raw_filename.endswith(".pdf")):
         return JSONResponse(
             status_code=415,
-            content={"error": "UNSUPPORTED_MEDIA_TYPE", "message": "Only PDF files are supported."},
+            content={"error": "UNSUPPORTED_MEDIA_TYPE", "message": "Only PDF files are supported.", "reason": "Only PDF files are supported."},
         )
+    filename = file.filename or "document.pdf"
 
     # 2. Read bytes and enforce 25 MB limit
     content = await file.read()
@@ -80,10 +84,32 @@ async def start_pdf_scan(
     if len(content) == 0:
         return JSONResponse(
             status_code=400,
-            content={"error": "EMPTY_FILE", "message": "Submitted PDF file contains 0 bytes."},
+            content={"error": "EMPTY_FILE", "message": "Submitted PDF file contains 0 bytes.", "reason": "Submitted PDF file contains 0 bytes."},
         )
 
-    # 3. Create scan job and dispatch background analysis
+    # 3. Synchronous PDF header validation (reject non-PDF content such as plaintext with 415 per api.md)
+    if b"%PDF-" not in content[:1024]:
+        return JSONResponse(
+            status_code=415,
+            content={"error": "UNSUPPORTED_MEDIA_TYPE", "message": "File does not contain a PDF header; only PDF files are supported.", "reason": "Only PDF files are supported."},
+        )
+
+    # 4. Synchronous structural validation for corrupted / truncated PDF streams (return 400 per api.md)
+
+    try:
+        reader = PdfReader(io.BytesIO(content))
+        if not reader.is_encrypted and len(reader.pages) == 0:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "INVALID_PDF", "message": "The PDF contains no pages.", "reason": "The PDF contains no pages."},
+            )
+    except Exception as exc:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "INVALID_PDF", "message": f"The PDF is corrupted or truncated: {exc}", "reason": f"The PDF is corrupted or truncated: {exc}"},
+        )
+
+    # 5. Create scan job and dispatch background analysis
     scan_job = store.create_scan()
     background_tasks.add_task(process_pdf_scan, scan_job.scan_id, content, filename)
 
@@ -96,11 +122,22 @@ async def start_pdf_scan(
 @api_router.post("/scans/web", status_code=422)
 async def start_web_scan(request: WebScanRequest):
     """Web scan endpoint (descoped for prototype per REQ-12 and FUTURE_WORK.md)."""
+    url = (request.url or "").strip()
+    if not (url.startswith("http://") or url.startswith("https://")) or "." not in url:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "INVALID_URL",
+                "message": "A valid HTTP or HTTPS URL is required.",
+                "reason": "A valid HTTP or HTTPS URL is required.",
+            },
+        )
     return JSONResponse(
         status_code=422,
         content={
             "error": "UNSUPPORTED_PAGE",
             "message": "Webpage scanning is outside current prototype scope. Please use /api/scans/pdf.",
+            "reason": "Webpage scanning is outside current prototype scope. Please use /api/scans/pdf.",
         },
     )
 

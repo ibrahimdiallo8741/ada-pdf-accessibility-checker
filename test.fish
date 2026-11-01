@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 set OUR_SYSTEM "https://adacheck.deltadizzy.org/system"
-set OUR_TESTER "https://adacheck.deltadizzy.org/tester"
+set OUR_TESTER "https://api.potentiate.club/tester"
 
 # Send the setup request to get the session id, use jq to extract it from the json response
 set SESSION_ID $(curl -s -X POST "$OUR_TESTER/test/setup" -H "Content-Type: application/json" -d "{\"target_url\": \"$OUR_SYSTEM\"}" | jq -r '.session_id')

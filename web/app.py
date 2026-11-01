@@ -149,13 +149,12 @@ async def start_web_scan(
     raw_url = (request.url or "").strip()
     try:
         validated_url = validate_and_sanitize_url(raw_url)
-    except (InvalidURLError, SSRFError) as exc:
+    except (InvalidURLError, SSRFError):
         return JSONResponse(
             status_code=400,
             content={
                 "error": "INVALID_URL",
-                "message": str(exc),
-                "reason": str(exc),
+                "message": "A valid HTTP or HTTPS URL is required.",
             },
         )
     except PageInaccessibleError as exc:
@@ -164,7 +163,6 @@ async def start_web_scan(
             content={
                 "error": "UNSUPPORTED_PAGE",
                 "message": str(exc),
-                "reason": str(exc),
             },
         )
 

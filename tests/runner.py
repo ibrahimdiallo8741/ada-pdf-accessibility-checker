@@ -24,6 +24,12 @@ from tests.test_cross_team import (
     test_tester_run_and_report_lifecycle,
     test_tester_setup_target_communication,
 )
+from tests.test_web_scanner import (
+    test_web_accessible_fixture,
+    test_web_empty_html_resilience,
+    test_web_inaccessible_fixture,
+    test_web_ssrf_and_invalid_schemes,
+)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -305,6 +311,21 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
     p_trun, d_trun = test_tester_run_and_report_lifecycle()
     record_test("Cross-Team Tester Execution & Coverage Suite", p_trun, d_trun, "REQ-15, REQ-18")
 
+    # --------------------------------------------------------------------------
+    # Tests for Milestone 5: Webpage Accessibility Ingestion & Screening
+    # --------------------------------------------------------------------------
+    p_wacc, d_wacc = test_web_accessible_fixture()
+    record_test("Web Screening: Accessible HTML DOM Evaluation", p_wacc, d_wacc, "REQ-01, REQ-04, REQ-15")
+
+    p_winacc, d_winacc = test_web_inaccessible_fixture()
+    record_test("Web Screening: Inaccessible HTML Defect Detection", p_winacc, d_winacc, "REQ-01, REQ-05, REQ-14")
+
+    p_wssrf, d_wssrf = test_web_ssrf_and_invalid_schemes()
+    record_test("Web Screening: SSRF Guard & Scheme Validation", p_wssrf, d_wssrf, "REQ-11, REQ-16")
+
+    p_wres, d_wres = test_web_empty_html_resilience()
+    record_test("Web Screening: Empty & Malformed HTML Resilience", p_wres, d_wres, "REQ-11, REQ-12")
+
     # Dynamic Test: Screen any extra team-supplied PDFs in fixtures directory
     standard_fixtures = {"fixture_accessible.pdf", "fixture_scanned.pdf", "fixture_images.pdf"}
     if target_fixtures.exists():
@@ -346,10 +367,10 @@ Integration: Added asynchronous multipart ingestion in `web/app.py` backed by in
 
 ----------------------------------------------------------------------
 
-[POST /api/scans/web] │ Requirement(s): [REQ-01, REQ-03, REQ-04, REQ-05, REQ-06, REQ-11] │ Implemented: [partial]
-Success responses conform: [no - HTTP 202 Accepted with scan_id is not returned because live web HTML DOM scanning was descoped to Milestone 5 per ADR-001] │ Error responses conform: [yes - returns HTTP 422 Unprocessable Entity with error code UNSUPPORTED_PAGE conforming to the contract's unsupported/inaccessible page error condition]
+[POST /api/scans/web] │ Requirement(s): [REQ-01, REQ-03, REQ-04, REQ-05, REQ-06, REQ-11] │ Implemented: [yes]
+Success responses conform: [yes] │ Error responses conform: [yes]
 
-Integration: Integrated into `web/app.py` via FastAPI route handler consuming `WebScanRequest`. Requests bypass the background processing queue and immediately return HTTP 422 `UNSUPPORTED_PAGE` with descriptive guidance directing callers to `/api/scans/pdf`. This ensures graceful contract conformance and prevents service crashes when external testers probe for web scanning capabilities.
+Integration: Implemented in `web/app.py` via asynchronous background task backed by `core/web_fetcher.py` and `core/web_checker.py`. Requests validate URL structure and SSRF bounds, return HTTP 202 Accepted with assigned `scan_id`, stream HTML directly into memory buffers without disk retention, evaluate WCAG 2.1 Level A rules (title, language, alt text, headings, form labels, bypass blocks), and record structured `ScanResult` domain instances.
 
 ----------------------------------------------------------------------
 

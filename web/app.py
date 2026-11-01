@@ -11,6 +11,14 @@ from pypdf import PdfReader
 from pypdf.errors import PyPdfError
 
 from core.checker import screen_pdf
+from core.web_checker import screen_html
+from core.web_fetcher import (
+    InvalidURLError,
+    PageInaccessibleError,
+    SSRFError,
+    fetch_webpage_html,
+    validate_and_sanitize_url,
+)
 from tests.runner import run_automated_suite
 from web.cross_team_routes import system_router, tester_router
 from web.storage import store
@@ -44,6 +52,19 @@ def process_pdf_scan(scan_id: str, content: bytes, filename: str):
         store.update_status(scan_id, status="REJECTED", error=f"PDF parsing error ({type(exc).__name__}): {exc}")
     except Exception as exc:  # noqa: BLE001
         store.update_status(scan_id, status="REJECTED", error=f"Unexpected error ({type(exc).__name__}): {exc}")
+
+
+async def process_web_scan(scan_id: str, url: str):
+    """Background task executing in-memory fetch and deterministic HTML accessibility screening."""
+    try:
+        store.update_status(scan_id, status="ANALYZING")
+        html_content = await fetch_webpage_html(url)
+        scan_result = screen_html(html_content, url=url, scan_id=scan_id)
+        store.update_status(scan_id, status="COMPLETED", result=scan_result)
+    except PageInaccessibleError as exc:
+        store.update_status(scan_id, status="REJECTED", error=f"Inaccessible webpage: {exc}")
+    except Exception as exc:  # noqa: BLE001
+        store.update_status(scan_id, status="REJECTED", error=f"Webpage evaluation error ({type(exc).__name__}): {exc}")
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Web UI"])
@@ -119,26 +140,40 @@ async def start_pdf_scan(
     )
 
 
-@api_router.post("/scans/web", status_code=422)
-async def start_web_scan(request: WebScanRequest):
-    """Web scan endpoint (descoped for prototype per REQ-12 and FUTURE_WORK.md)."""
-    url = (request.url or "").strip()
-    if not (url.startswith("http://") or url.startswith("https://")) or "." not in url:
+@api_router.post("/scans/web", status_code=202)
+async def start_web_scan(
+    background_tasks: BackgroundTasks,
+    request: WebScanRequest,
+):
+    """Submits a webpage URL for asynchronous accessibility screening (REQ-01, REQ-03, REQ-11, REQ-12)."""
+    raw_url = (request.url or "").strip()
+    try:
+        validated_url = validate_and_sanitize_url(raw_url)
+    except (InvalidURLError, SSRFError) as exc:
         return JSONResponse(
             status_code=400,
             content={
                 "error": "INVALID_URL",
-                "message": "A valid HTTP or HTTPS URL is required.",
-                "reason": "A valid HTTP or HTTPS URL is required.",
+                "message": str(exc),
+                "reason": str(exc),
             },
         )
+    except PageInaccessibleError as exc:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "UNSUPPORTED_PAGE",
+                "message": str(exc),
+                "reason": str(exc),
+            },
+        )
+
+    scan_job = store.create_scan()
+    background_tasks.add_task(process_web_scan, scan_job.scan_id, validated_url)
+
     return JSONResponse(
-        status_code=422,
-        content={
-            "error": "UNSUPPORTED_PAGE",
-            "message": "Webpage scanning is outside current prototype scope. Please use /api/scans/pdf.",
-            "reason": "Webpage scanning is outside current prototype scope. Please use /api/scans/pdf.",
-        },
+        status_code=202,
+        content={"scan_id": scan_job.scan_id, "status": "ANALYZING"},
     )
 
 

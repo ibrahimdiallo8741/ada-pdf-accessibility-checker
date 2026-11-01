@@ -3,20 +3,29 @@ let currentResults = null;
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('dragover');
-});
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', () => {
-  if (fileInput.files.length) handleFile(fileInput.files[0]);
-});
+if (dropZone && fileInput) {
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+}
+
+const urlInput = document.getElementById('web-url-input');
+if (urlInput) {
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') startWebScan();
+  });
+}
 
 function handleFile(file) {
   if (!file.name.toLowerCase().endsWith('.pdf')) {
@@ -36,9 +45,18 @@ function handleFile(file) {
 
 function switchTab(tab) {
   document.getElementById('tab-scan').classList.toggle('active', tab === 'scan');
+  document.getElementById('tab-web').classList.toggle('active', tab === 'web');
   document.getElementById('tab-tests').classList.toggle('active', tab === 'tests');
   document.getElementById('view-scan').classList.toggle('hidden', tab !== 'scan');
+  document.getElementById('view-web').classList.toggle('hidden', tab !== 'web');
   document.getElementById('view-tests').classList.toggle('hidden', tab !== 'tests');
+}
+
+function resetButtons() {
+  const startPdfBtn = document.getElementById('start-btn');
+  if (startPdfBtn && selectedFile) startPdfBtn.disabled = false;
+  const startWebBtn = document.getElementById('start-web-btn');
+  if (startWebBtn) startWebBtn.disabled = false;
 }
 
 async function startScan() {
@@ -55,7 +73,7 @@ async function startScan() {
     const res = await fetch('/api/scans/pdf', { method: 'POST', body: formData });
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.message || 'Upload failed');
+      throw new Error(err.message || err.reason || 'Upload failed');
     }
     const data = await res.json();
     document.getElementById('progress-scan-id').textContent = data.scan_id;
@@ -63,7 +81,44 @@ async function startScan() {
   } catch (err) {
     alert('Scan submission failed: ' + err.message);
     document.getElementById('progress-card').classList.add('hidden');
-    document.getElementById('start-btn').disabled = false;
+    resetButtons();
+  }
+}
+
+async function startWebScan() {
+  const input = document.getElementById('web-url-input');
+  const url = (input.value || '').trim();
+  if (!url) {
+    alert('Please enter a webpage URL.');
+    return;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    alert('URL must begin with http:// or https://');
+    return;
+  }
+
+  const btn = document.getElementById('start-web-btn');
+  btn.disabled = true;
+  document.getElementById('progress-card').classList.remove('hidden');
+  document.getElementById('results-card').classList.add('hidden');
+  document.getElementById('progress-status').textContent = 'Submitting webpage for screening...';
+
+  try {
+    const res = await fetch('/api/scans/web', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || data.reason || 'Failed to submit webpage scan');
+    }
+    document.getElementById('progress-scan-id').textContent = data.scan_id;
+    pollStatus(data.scan_id);
+  } catch (err) {
+    alert('Web scan error: ' + err.message);
+    document.getElementById('progress-card').classList.add('hidden');
+    resetButtons();
   }
 }
 
@@ -80,14 +135,14 @@ async function pollStatus(scanId) {
         fetchResults(scanId);
       } else if (data.status === 'REJECTED') {
         clearInterval(interval);
-        alert('Scan was rejected: ' + (data.error || 'Corrupted or unreadable PDF'));
+        alert('Scan was rejected: ' + (data.error || 'Unable to complete accessibility scan.'));
         document.getElementById('progress-card').classList.add('hidden');
-        document.getElementById('start-btn').disabled = false;
+        resetButtons();
       }
     } catch (err) {
       clearInterval(interval);
       alert('Error polling scan status: ' + err.message);
-      document.getElementById('start-btn').disabled = false;
+      resetButtons();
     }
   }, 1000);
 }
@@ -99,9 +154,10 @@ async function fetchResults(scanId) {
     renderResults(currentResults);
     document.getElementById('progress-card').classList.add('hidden');
     document.getElementById('results-card').classList.remove('hidden');
-    document.getElementById('start-btn').disabled = false;
+    resetButtons();
   } catch (err) {
     alert('Failed fetching results: ' + err.message);
+    resetButtons();
   }
 }
 
@@ -118,6 +174,10 @@ function escapeHTML(str) {
 function renderResults(res) {
   document.getElementById('res-file').textContent = res.file_or_url;
   document.getElementById('metric-pages').textContent = res.pages;
+  const pagesLbl = document.getElementById('metric-pages-lbl');
+  if (pagesLbl) {
+    pagesLbl.textContent = res.file_or_url.startsWith('http') ? 'DOM View' : 'Pages';
+  }
   document.getElementById('metric-checks').textContent = res.summary.checks;
   document.getElementById('metric-passed').textContent = res.summary.passed;
   document.getElementById('metric-issues').textContent = res.summary.issues;
@@ -130,6 +190,7 @@ function renderResults(res) {
     let badgeClass = 'badge-pass';
     if (f.status === 'Issue') badgeClass = 'badge-issue';
     else if (f.status === 'Needs Human Review') badgeClass = 'badge-review';
+    else if (f.status === 'Could Not Evaluate') badgeClass = 'badge-issue';
 
     const findingId = escapeHTML(f.finding_id);
     const location = escapeHTML(f.input_location);
@@ -157,7 +218,10 @@ function downloadJSON() {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentResults, null, 4));
   const a = document.createElement('a');
   a.href = dataStr;
-  a.download = `${currentResults.file_or_url.replace(/\.pdf$/i, '')}_accessibility_report.json`;
+  const baseName = currentResults.file_or_url.startsWith('http')
+    ? 'webpage_accessibility_report.json'
+    : `${currentResults.file_or_url.replace(/\.pdf$/i, '')}_accessibility_report.json`;
+  a.download = baseName;
   a.click();
 }
 

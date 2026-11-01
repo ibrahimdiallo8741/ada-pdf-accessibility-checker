@@ -58,3 +58,20 @@
 - **Consequences**:
   - Sub-second deterministic environment installation across all developer and CI machines.
   - AI agents and contributors execute unified commands (`uv run python -m tests.runner`, `uv run uvicorn web.app:app`).
+
+---
+
+## ADR-005: Webpage Accessibility Ingestion & Streaming In-Memory HTML Evaluation (Milestone 5)
+
+- **Date**: 2026-11-01
+- **Status**: Accepted
+- **Context**: Milestone 5 scheduled the re-expansion of project scope to support public webpage URLs (`POST /api/scans/web`) alongside PDF documents. Evaluating web accessibility can be performed via lightweight Python DOM parsing or heavyweight headless browser engines (`axe-core` via Playwright). Headless Chromium requires 1–2 GiB RAM (causing OOM on Cloud Run's 512 MiB limit), expands container images to 1.2 GB, inflates billed execution duration by ~46×, and risks `/tmp` cache leakage against zero-disk privacy invariants.
+- **Decision**: Implement Milestone 5 using a custom, pure Python streaming HTML parser (`core/web_checker.py`, `core/web_checks.py`) backed by an async HTTP streaming fetcher with strict SSRF guarding (`core/web_fetcher.py`).
+  - *Engine*: Python standard library `html.parser.HTMLParser` evaluating Title (2.4.2), Language (3.1.1), Image Alt (1.1.1), Heading Hierarchy (1.3.1), Form Labels (1.3.1/4.1.2), and Bypass Blocks (2.4.1).
+  - *SSRF Defense*: Blacklist loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), private RFC 1918 networks, and cloud metadata endpoints (`169.254.169.254`).
+  - *Privacy*: 100% in-memory streaming with zero disk writes, fitting comfortably within the 512 MiB Cloud Run container footprint.
+- **Consequences**:
+  - `POST /api/scans/web` and `POST /system/api/scans/web` activated and returning HTTP 202 with async status tracking.
+  - Sub-100ms execution times per webpage scan with zero new external dependencies.
+  - Web GUI updated with dedicated Web URL Screening interface.
+  - Dynamic JavaScript Single Page Applications (SPAs) requiring client-side hydration or computed CSS contrast remain deferred to future browser worker microservices (Milestone 6).

@@ -14,6 +14,7 @@ from core.checks import (
     check_title,
 )
 from core.models import Finding, ScanResult, ScanSummary
+from core.pdf_struct_parser import parse_structure_tree
 
 
 def screen_pdf(
@@ -87,6 +88,13 @@ def screen_pdf(
         root_obj = reader_py.root_object
         findings.append(check_structure(root_obj, finding_id=f"F{finding_counter:03d}"))
         finding_counter += 1
+
+        # Deep Semantic Structure Tree Traversal (Milestone 6)
+        if root_obj and "/StructTreeRoot" in root_obj:
+            struct_findings, finding_counter = parse_structure_tree(
+                root_obj, start_counter=finding_counter
+            )
+            findings.extend(struct_findings)
 
         # 4. Per-page text and image checks
         for page_num, page in enumerate(doc_mu.pages(), start=1):

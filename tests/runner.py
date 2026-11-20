@@ -30,6 +30,13 @@ from tests.test_web_scanner import (
     test_web_inaccessible_fixture,
     test_web_ssrf_and_invalid_schemes,
 )
+from tests.test_phase5_milestones import (
+    test_m6_figure_alt_text_evaluation,
+    test_m6_heading_hierarchy_sequential,
+    test_m6_heading_hierarchy_skipped_levels,
+    test_m6_list_consistency,
+    test_m6_table_structural_integrity,
+)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -325,6 +332,22 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
 
     p_wres, d_wres = test_web_empty_html_resilience()
     record_test("Web Screening: Empty & Malformed HTML Resilience", p_wres, d_wres, "REQ-11, REQ-12")
+
+    # Milestone 6: Structure Tree Traversal Suite (REQ-04, REQ-14)
+    p_m6_skip, d_m6_skip = test_m6_heading_hierarchy_skipped_levels()
+    record_test("Structure Tree: Heading Hierarchy Skipped Levels", p_m6_skip, d_m6_skip, "REQ-04, REQ-14")
+
+    p_m6_seq, d_m6_seq = test_m6_heading_hierarchy_sequential()
+    record_test("Structure Tree: Sequential Heading Hierarchy", p_m6_seq, d_m6_seq, "REQ-04, REQ-14")
+
+    p_m6_tbl, d_m6_tbl = test_m6_table_structural_integrity()
+    record_test("Structure Tree: Table Structural Integrity", p_m6_tbl, d_m6_tbl, "REQ-04, REQ-14")
+
+    p_m6_lst, d_m6_lst = test_m6_list_consistency()
+    record_test("Structure Tree: List Structural Consistency", p_m6_lst, d_m6_lst, "REQ-04, REQ-14")
+
+    p_m6_fig, d_m6_fig = test_m6_figure_alt_text_evaluation()
+    record_test("Structure Tree: Figure Alternative Text Quality", p_m6_fig, d_m6_fig, "REQ-04, REQ-14")
 
     # Dynamic Test: Screen any extra team-supplied PDFs in fixtures directory
     standard_fixtures = {"fixture_accessible.pdf", "fixture_scanned.pdf", "fixture_images.pdf"}

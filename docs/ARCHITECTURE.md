@@ -217,3 +217,34 @@ flowchart LR
 - **SSL/TLS**: Universal SSL with **Full (Strict)** encryption to Cloud Run's Google-managed origin certificate.
 - **Edge Caching**: Edge Cache Rule configured for `/static/*` with 1-month browser TTL and 1-day edge TTL to maximize performance and minimize Cloud Run container invocations.
 - **Egress**: Zero-cost egress routing via Cloudflare's bandwidth alliance.
+
+---
+
+## 6. Continuous Integration & Continuous Deployment (CI/CD)
+
+The project leverages a GitHub Actions pipeline ([`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml)):
+
+```mermaid
+flowchart LR
+    Push([Push / PR]) --> CI["CI Job (ubuntu-latest)"]
+    subgraph CI_Job["1. Automated Validation"]
+        UV[Install uv & Python 3.13] --> Test[Run 47 Acceptance Tests]
+        Test --> Smoke[CLI & Web Boot Check]
+        Smoke --> Docker[Docker Image Build Test]
+    end
+    CI -->|main branch push| CD["CD Job (Cloud Run)"]
+    subgraph CD_Job["2. Production Deployment"]
+        Auth[Authenticate to GCP] --> Deploy[Deploy to Cloud Run via gcloud]
+    end
+```
+
+### 1. CI Workflow (Pull Requests & Branch Pushes)
+- **Environment**: Ubuntu Linux with Python 3.13 and `astral-sh/setup-uv`.
+- **Suite Gate**: Runs `uv run python -m tests.runner` requiring all 47 tests (AC-01..AC-18, M6..M8, Parity) to pass.
+- **Interface Smoke**: Verifies CLI invocation (`pdf_checker.py`) and FastAPI ASGI initialization (`web.app:app`).
+- **Container Verification**: Executes `docker build -t ada-compliance-checker:ci .` to guarantee `requirements.txt` and `Dockerfile` remain in sync with runtime dependencies.
+
+### 2. CD Workflow (Main Branch Releases)
+- **Target**: Google Cloud Run (`ada-compliance-checker` in `us-central1`).
+- **Authentication**: Authenticates using GitHub Secret `GCP_SA_KEY` via `google-github-actions/auth`.
+- **Deployment**: Deploys source container via `google-github-actions/deploy-cloudrun` with zero downtime.

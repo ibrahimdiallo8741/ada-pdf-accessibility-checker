@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Automated Tests & Container Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up Python 3.13
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run Automated Acceptance Tests (47/47)
+        run: uv run python -m tests.runner
+
+      - name: Verify CLI Interface
+        run: echo "tests/fixtures/fixture_accessible.pdf" | uv run python pdf_checker.py
+
+      - name: Verify Web API Initialization
+        run: uv run python -c "from web.app import app; print('FastAPI application initialized successfully')"
+
+      - name: Verify Docker Container Build
+        run: docker build -t ada-compliance-checker:ci .
+
+  deploy:
+    name: Deploy to Google Cloud Run
+    needs: test
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ada-compliance-checker
+          region: us-central1
+          source: ./
+          flags: |
+            --allow-unauthenticated
+            --port=8080
+            --memory=512Mi
+            --cpu=1
+            --min-instances=0
+            --max-instances=2

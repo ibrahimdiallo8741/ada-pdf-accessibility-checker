@@ -11,14 +11,18 @@ AI never provides a hard pass or certifies compliance.
 """
 
 import json
+import logging
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any
 
 import httpx
 
 from core.models import Finding
+
+logger = logging.getLogger("adacheck.ai")
 
 
 def _load_env_file() -> None:
@@ -194,18 +198,38 @@ def query_gemini_rest(
         }
     }
 
+    t0 = time.perf_counter()
     try:
+        logger.info("Querying Gemini REST API with model '%s' (title='%s', items=%d)", model, title[:50], len(content_items))
         with httpx.Client(timeout=timeout_seconds) as client:
             resp = client.post(endpoint, json=payload)
+            elapsed_ms = (time.perf_counter() - t0) * 1000
             if resp.status_code == 200:
                 data = resp.json()
                 text_out = data["candidates"][0]["content"]["parts"][0]["text"]
                 parsed = json.loads(text_out)
                 findings = parsed.get("findings")
                 if isinstance(findings, list):
+                    logger.info("Gemini API call succeeded in %.1fms: model='%s', findings_count=%d", elapsed_ms, model, len(findings))
                     return findings
-    except Exception:
-        # Graceful fallback on any network, timeout, or parsing error
+            else:
+                logger.warning(
+                    "Gemini API returned HTTP %s in %.1fms for model '%s': %s. Falling back to local heuristics.",
+                    resp.status_code,
+                    elapsed_ms,
+                    model,
+                    resp.text[:200],
+                )
+                return None
+    except httpx.TimeoutException:
+        logger.warning("Gemini API call timed out after %.1fs for model '%s'. Falling back to local heuristics.", timeout_seconds, model)
+        return None
+    except Exception as exc:
+        logger.warning(
+            "Gemini API request failed (%s: %s). Falling back to local heuristics.",
+            type(exc).__name__,
+            exc,
+        )
         return None
     return None
 
@@ -233,8 +257,11 @@ def evaluate_ai_heuristics(
             api_key=api_key,
             model=model,
         )
+    else:
+        logger.info("No GEMINI_API_KEY configured; using offline local regex heuristics.")
 
     if candidate_items is None:
+        logger.info("Running local deterministic regex heuristic analyzer for qualitative criteria.")
         candidate_items = _local_heuristic_analyzer(title, content_items)
 
     for item in candidate_items:
@@ -250,4 +277,5 @@ def evaluate_ai_heuristics(
         ))
         counter += 1
 
+    logger.info("AI heuristic evaluation complete: generated %d advisory finding(s).", len(findings))
     return findings, counter

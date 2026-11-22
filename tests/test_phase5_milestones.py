@@ -475,7 +475,7 @@ def test_m8_offline_resilience_fallback() -> tuple[bool, str]:
     old_key = os.environ.get("GEMINI_API_KEY")
     try:
         os.environ["GEMINI_API_KEY"] = ""
-        findings, counter = evaluate_ai_heuristics(
+        findings, _counter = evaluate_ai_heuristics(
             title="scan001",
             content_items=[("Section A", "Press the blue button on the right to continue.")],
             start_counter=10,

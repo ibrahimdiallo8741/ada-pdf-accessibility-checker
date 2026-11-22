@@ -1,8 +1,11 @@
+import logging
 import threading
 import time
 from dataclasses import dataclass, field
 
 from core.models import ScanResult, ScanStatus
+
+logger = logging.getLogger("adacheck.storage")
 
 
 @dataclass
@@ -71,6 +74,8 @@ class ScanStore:
         ]
         for sid in expired_keys:
             del self._scans[sid]
+        if expired_keys:
+            logger.info("Evicted %d expired scan job(s) from memory store: %s", len(expired_keys), expired_keys)
 
 
 # Global in-memory instance

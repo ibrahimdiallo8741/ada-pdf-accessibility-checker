@@ -1,4 +1,6 @@
 import io
+import logging
+import time
 import uuid
 from pathlib import Path
 
@@ -20,6 +22,8 @@ from core.contrast_analyzer import analyze_graphical_contrast, analyze_page_cont
 from core.models import Finding, ScanResult, ScanSummary
 from core.pdf_struct_parser import parse_structure_tree
 
+logger = logging.getLogger("adacheck.pdf")
+
 
 def screen_pdf(
     source: str | Path | bytes,
@@ -27,18 +31,23 @@ def screen_pdf(
     scan_id: str | None = None,
 ) -> ScanResult:
     """Performs deterministic accessibility screening on a PDF file path or raw bytes buffer."""
+    t0 = time.perf_counter()
     if scan_id is None:
         scan_id = f"S-{uuid.uuid4().hex[:8].upper()}"
 
     if isinstance(source, bytes):
         resolved_name = filename or "document.pdf"
+        byte_size = len(source)
         doc_mu = pymupdf.open(stream=source, filetype="pdf")
         reader_py = PdfReader(io.BytesIO(source))
     else:
         path = Path(source)
         resolved_name = filename or path.name
+        byte_size = path.stat().st_size if path.exists() else 0
         doc_mu = pymupdf.open(str(path))
         reader_py = PdfReader(str(path))
+
+    logger.info("PDF scan [%s] started: filename='%s', size=%d bytes", scan_id, resolved_name, byte_size)
 
     # Authenticate/decrypt documents with standard empty/permissions passwords
     if getattr(doc_mu, "needs_pass", False):
@@ -166,6 +175,19 @@ def screen_pdf(
         issues=sum(1 for f in findings if f.status == "Issue"),
         human_review=sum(1 for f in findings if f.status == "Needs Human Review"),
         could_not_evaluate=sum(1 for f in findings if f.status == "Could Not Evaluate"),
+    )
+
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    logger.info(
+        "PDF scan [%s] completed in %.1fms: %d pages, %d checks (Pass=%d, Issue=%d, Review=%d, CouldNotEval=%d)",
+        scan_id,
+        elapsed_ms,
+        pages_count,
+        summary.checks,
+        summary.passed,
+        summary.issues,
+        summary.human_review,
+        summary.could_not_evaluate,
     )
 
     return ScanResult(

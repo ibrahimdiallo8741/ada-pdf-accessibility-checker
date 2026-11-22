@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import httpx
@@ -8,13 +9,17 @@ from pydantic import BaseModel, Field
 from tests.http_cross_tester import is_self_target, run_cross_team_tests
 from web.cross_team_storage import cross_store
 
+logger = logging.getLogger("adacheck.cross_team")
+
 try:
     import coverage
     _HAS_COVERAGE = True
 except ImportError:
     _HAS_COVERAGE = False
+    logger.warning("coverage package not installed; live code coverage tracing disabled")
 
 _system_coverage_instances: dict[str, Any] = {}
+_system_coverage_results: dict[str, dict[str, Any]] = {}
 
 system_router = APIRouter(tags=["Cross-Team System Interface"])
 tester_router = APIRouter(tags=["Cross-Team Tester Interface"])
@@ -53,15 +58,19 @@ async def system_setup(req: SystemSetupRequest):
         cross_store.register_system_session(req.session_id, req.setup)
         if _HAS_COVERAGE:
             try:
-                # Session-scoped coverage tracer measuring core/ and web/ modules
+                # Session-scoped coverage tracer measuring core/ and web/ modules (100% in-memory)
                 cov = coverage.Coverage(
+                    data_file=None,
                     source=["core", "web"],
                     omit=["tests/*", "web/cross_team_*"],
                 )
                 cov.start()
                 _system_coverage_instances[req.session_id] = cov
-            except Exception:
-                pass
+                logger.info("Started session coverage tracing: session_id=%s", req.session_id)
+            except Exception as exc:
+                logger.error("Failed to start session coverage tracer (session_id=%s): %s", req.session_id, exc, exc_info=True)
+        else:
+            logger.warning("coverage package not installed; session %s live code coverage disabled", req.session_id)
         return JSONResponse(
             status_code=201,
             content={"session_id": req.session_id},
@@ -88,11 +97,14 @@ async def system_report(session_id: str = Query(..., min_length=1, description="
             content={"message": f"Session '{session_id}' not found.", "source": "system"},
         )
 
+    if session_id in _system_coverage_results:
+        return _system_coverage_results[session_id]
+
     code_covered = None
     code_total = None
     code_basis = "Source lines; target instrumentation unavailable"
 
-    cov = _system_coverage_instances.pop(session_id, None)
+    cov = _system_coverage_instances.get(session_id)
     if cov is not None:
         try:
             cov.stop()
@@ -102,17 +114,22 @@ async def system_report(session_id: str = Query(..., min_length=1, description="
             total_stmts = 0
             covered_stmts = 0
             for f in files:
-                analysis = cov._analyze(f)
-                total_stmts += len(analysis.statements)
-                covered_stmts += len(analysis.executed)
+                try:
+                    analysis = cov._analyze(f)
+                    total_stmts += len(analysis.statements)
+                    covered_stmts += len(analysis.executed)
+                except Exception as file_exc:
+                    logger.debug("Coverage analyze failed for file %s: %s", f, file_exc)
             if total_stmts > 0:
                 code_covered = covered_stmts
                 code_total = total_stmts
                 code_basis = f"Source lines executed in core/ and web/ during test session ({covered_stmts}/{total_stmts} statements)"
+                logger.info("Session coverage calculated: session_id=%s, covered=%d, total=%d", session_id, covered_stmts, total_stmts)
         except Exception as e:
             code_basis = f"Source lines; live coverage calculation error: {e}"
+            logger.error("Live coverage calculation error (session_id=%s): %s", session_id, e, exc_info=True)
 
-    return {
+    result = {
         "session_id": session_id,
         "coverage": {
             "code": {
@@ -122,6 +139,9 @@ async def system_report(session_id: str = Query(..., min_length=1, description="
             },
         },
     }
+    if code_covered is not None:
+        _system_coverage_results[session_id] = result
+    return result
 
 
 # --- Tester Role Endpoints ---

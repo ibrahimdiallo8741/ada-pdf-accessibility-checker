@@ -5,3 +5,4 @@ uvicorn>=0.32.0
 python-multipart>=0.0.12
 cryptography>=3.1.0
 httpx>=0.28.1
+coverage>=7.17.4

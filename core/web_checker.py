@@ -1,3 +1,5 @@
+import logging
+import time
 import uuid
 from html.parser import HTMLParser
 from typing import Any
@@ -15,6 +17,8 @@ from core.web_checks import (
     check_web_tables,
     check_web_title,
 )
+
+logger = logging.getLogger("adacheck.web")
 
 
 class WebDOMExtractor(HTMLParser):
@@ -183,8 +187,11 @@ def screen_html(
     scan_id: str | None = None,
 ) -> ScanResult:
     """Performs deterministic accessibility screening on raw HTML content in memory."""
+    t0 = time.perf_counter()
     if scan_id is None:
         scan_id = f"W-{uuid.uuid4().hex[:8].upper()}"
+
+    logger.info("Web scan [%s] started: url='%s', size=%d bytes HTML", scan_id, url, len(html_content or ""))
 
     extractor = WebDOMExtractor()
     try:
@@ -271,6 +278,18 @@ def screen_html(
         issues=sum(1 for f in findings if f.status == "Issue"),
         human_review=sum(1 for f in findings if f.status == "Needs Human Review"),
         could_not_evaluate=sum(1 for f in findings if f.status == "Could Not Evaluate"),
+    )
+
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    logger.info(
+        "Web scan [%s] completed in %.1fms: %d checks (Pass=%d, Issue=%d, Review=%d, CouldNotEval=%d)",
+        scan_id,
+        elapsed_ms,
+        summary.checks,
+        summary.passed,
+        summary.issues,
+        summary.human_review,
+        summary.could_not_evaluate,
     )
 
     return ScanResult(

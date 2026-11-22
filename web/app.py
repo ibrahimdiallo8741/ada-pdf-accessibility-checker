@@ -1,4 +1,6 @@
 import io
+import logging
+import os
 from pathlib import Path
 from typing import Annotated
 
@@ -23,6 +25,13 @@ from tests.runner import run_automated_suite
 from web.cross_team_routes import system_router, tester_router
 from web.storage import store
 
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, log_level, logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("adacheck.web_app")
+
 MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB per api.md
 
 app = FastAPI(
@@ -44,26 +53,34 @@ class WebScanRequest(BaseModel):
 
 def process_pdf_scan(scan_id: str, content: bytes, filename: str):
     """Background task executing deterministic PDF accessibility screening."""
+    logger.info("PDF scan started: scan_id=%s, filename=%s, size_bytes=%d", scan_id, filename, len(content))
     try:
         store.update_status(scan_id, status="ANALYZING")
         scan_result = screen_pdf(content, filename=filename, scan_id=scan_id)
         store.update_status(scan_id, status="COMPLETED", result=scan_result)
+        logger.info("PDF scan completed: scan_id=%s, total_findings=%d", scan_id, len(scan_result.findings))
     except (pymupdf.FileDataError, PyPdfError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        logger.warning("PDF scan rejected (parsing error): scan_id=%s, exc=%s", scan_id, exc)
         store.update_status(scan_id, status="REJECTED", error=f"PDF parsing error ({type(exc).__name__}): {exc}")
     except Exception as exc:  # noqa: BLE001
+        logger.error("PDF scan unexpected error: scan_id=%s, exc=%s", scan_id, exc, exc_info=True)
         store.update_status(scan_id, status="REJECTED", error=f"Unexpected error ({type(exc).__name__}): {exc}")
 
 
 async def process_web_scan(scan_id: str, url: str):
     """Background task executing in-memory fetch and deterministic HTML accessibility screening."""
+    logger.info("Web scan started: scan_id=%s, url=%s", scan_id, url)
     try:
         store.update_status(scan_id, status="ANALYZING")
         html_content = await fetch_webpage_html(url)
         scan_result = screen_html(html_content, url=url, scan_id=scan_id)
         store.update_status(scan_id, status="COMPLETED", result=scan_result)
+        logger.info("Web scan completed: scan_id=%s, total_findings=%d", scan_id, len(scan_result.findings))
     except PageInaccessibleError as exc:
+        logger.warning("Web scan inaccessible webpage: scan_id=%s, exc=%s", scan_id, exc)
         store.update_status(scan_id, status="REJECTED", error=f"Inaccessible webpage: {exc}")
     except Exception as exc:  # noqa: BLE001
+        logger.error("Web scan unexpected error: scan_id=%s, exc=%s", scan_id, exc, exc_info=True)
         store.update_status(scan_id, status="REJECTED", error=f"Webpage evaluation error ({type(exc).__name__}): {exc}")
 
 
@@ -132,6 +149,7 @@ async def start_pdf_scan(
 
     # 5. Create scan job and dispatch background analysis
     scan_job = store.create_scan()
+    logger.info("Accepted PDF scan request: scan_id=%s, filename=%s, size_bytes=%d", scan_job.scan_id, filename, len(content))
     background_tasks.add_task(process_pdf_scan, scan_job.scan_id, content, filename)
 
     return JSONResponse(
@@ -167,6 +185,7 @@ async def start_web_scan(
         )
 
     scan_job = store.create_scan()
+    logger.info("Accepted Web scan request: scan_id=%s, url=%s", scan_job.scan_id, validated_url)
     background_tasks.add_task(process_web_scan, scan_job.scan_id, validated_url)
 
     return JSONResponse(

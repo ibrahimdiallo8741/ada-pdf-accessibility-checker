@@ -6,6 +6,32 @@ from pypdf.errors import PyPdfError
 
 from core.checker import screen_pdf
 from core.models import TestCaseResult, TestSuiteSummary
+from tests.test_cross_team import (
+    test_system_dual_mount_api,
+    test_system_setup_and_report_lifecycle,
+    test_tester_run_and_report_lifecycle,
+    test_tester_setup_target_communication,
+)
+from tests.test_phase5_milestones import (
+    test_m6_figure_alt_text_evaluation,
+    test_m6_heading_hierarchy_sequential,
+    test_m6_heading_hierarchy_skipped_levels,
+    test_m6_list_consistency,
+    test_m6_table_structural_integrity,
+    test_m7_background_drawing_detection,
+    test_m7_contrast_math_unit_tests,
+    test_m7_text_contrast_passing_and_failing,
+    test_m8_color_only_reliance_detection,
+    test_m8_offline_resilience_fallback,
+    test_m8_sensory_characteristics_detection,
+    test_m8_uninformative_title_detection,
+    test_p52_pdf_form_fields,
+    test_p52_pdf_multipage_outlines,
+    test_p52_web_list_consistency,
+    test_p52_web_table_integrity,
+    test_p53_web_contrast_failing,
+    test_p53_web_contrast_passing,
+)
 from tests.test_roadmap_sections import (
     test_api_contract_and_statuses,
     test_concurrent_ingestion_stress,
@@ -18,24 +44,11 @@ from tests.test_roadmap_sections import (
     test_scale_multipage,
     test_zero_byte_rejection,
 )
-from tests.test_cross_team import (
-    test_system_dual_mount_api,
-    test_system_setup_and_report_lifecycle,
-    test_tester_run_and_report_lifecycle,
-    test_tester_setup_target_communication,
-)
 from tests.test_web_scanner import (
     test_web_accessible_fixture,
     test_web_empty_html_resilience,
     test_web_inaccessible_fixture,
     test_web_ssrf_and_invalid_schemes,
-)
-from tests.test_phase5_milestones import (
-    test_m6_figure_alt_text_evaluation,
-    test_m6_heading_hierarchy_sequential,
-    test_m6_heading_hierarchy_skipped_levels,
-    test_m6_list_consistency,
-    test_m6_table_structural_integrity,
 )
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -215,7 +228,7 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
                 and f.input_location
                 and f.issue_description
                 and f.WCAG_criterion
-                and f.analysis_method == "Deterministic"
+                and f.analysis_method in ("Deterministic", "AI", "Human Review")
                 for f in trace_res.findings
             )
             record_test(
@@ -348,6 +361,48 @@ def run_automated_suite(fixtures_path: Path | None = None) -> TestSuiteSummary:
 
     p_m6_fig, d_m6_fig = test_m6_figure_alt_text_evaluation()
     record_test("Structure Tree: Figure Alternative Text Quality", p_m6_fig, d_m6_fig, "REQ-04, REQ-14")
+
+    # Phase 5.2: PDF & Web Feature Parity Suite (REQ-04, REQ-14)
+    p_w_tbl, d_w_tbl = test_p52_web_table_integrity()
+    record_test("Web Parity: HTML Table Structural Integrity (<th>)", p_w_tbl, d_w_tbl, "REQ-04, REQ-14")
+
+    p_w_lst, d_w_lst = test_p52_web_list_consistency()
+    record_test("Web Parity: HTML List Structural Consistency (<ol>/<ul>)", p_w_lst, d_w_lst, "REQ-04, REQ-14")
+
+    p_p_out, d_p_out = test_p52_pdf_multipage_outlines()
+    record_test("PDF Parity: Multi-page Navigational Outlines (/Outlines)", p_p_out, d_p_out, "REQ-04, REQ-14")
+
+    p_p_frm, d_p_frm = test_p52_pdf_form_fields()
+    record_test("PDF Parity: Interactive Form Field Labels (/TU)", p_p_frm, d_p_frm, "REQ-04, REQ-14")
+
+    # Milestone 7: Visual & Contrast Analysis Suite (REQ-04, REQ-14)
+    p_m7_math, d_m7_math = test_m7_contrast_math_unit_tests()
+    record_test("Contrast Engine: WCAG 2.1 Luminance & Ratio Formulas", p_m7_math, d_m7_math, "REQ-04, REQ-14")
+
+    p_m7_txt, d_m7_txt = test_m7_text_contrast_passing_and_failing()
+    record_test("Contrast Engine: Text Contrast Detection (Normal & Large)", p_m7_txt, d_m7_txt, "REQ-04, REQ-14")
+
+    p_m7_bg, d_m7_bg = test_m7_background_drawing_detection()
+    record_test("Contrast Engine: Vector Drawing Background Fill Detection", p_m7_bg, d_m7_bg, "REQ-04, REQ-14")
+
+    p_w_cpass, d_w_cpass = test_p53_web_contrast_passing()
+    record_test("Contrast Engine: Web Inline CSS High Contrast Detection", p_w_cpass, d_w_cpass, "REQ-04, REQ-14")
+
+    p_w_cfail, d_w_cfail = test_p53_web_contrast_failing()
+    record_test("Contrast Engine: Web Inline CSS Low Contrast Detection", p_w_cfail, d_w_cfail, "REQ-04, REQ-14")
+
+    # Milestone 8: Contextual AI Advisory Heuristics Suite (REQ-06, REQ-14)
+    p_m8_sens, d_m8_sens = test_m8_sensory_characteristics_detection()
+    record_test("AI Heuristics: Sensory Characteristics Detection (WCAG 1.3.3)", p_m8_sens, d_m8_sens, "REQ-06, REQ-14")
+
+    p_m8_title, d_m8_title = test_m8_uninformative_title_detection()
+    record_test("AI Heuristics: Uninformative Document Title Detection (WCAG 2.4.2)", p_m8_title, d_m8_title, "REQ-06, REQ-14")
+
+    p_m8_color, d_m8_color = test_m8_color_only_reliance_detection()
+    record_test("AI Heuristics: Color-Only Information Reliance (WCAG 1.4.1)", p_m8_color, d_m8_color, "REQ-06, REQ-14")
+
+    p_m8_fall, d_m8_fall = test_m8_offline_resilience_fallback()
+    record_test("AI Heuristics: Offline Resilience & Graceful Fallback", p_m8_fall, d_m8_fall, "REQ-06, REQ-14")
 
     # Dynamic Test: Screen any extra team-supplied PDFs in fixtures directory
     standard_fixtures = {"fixture_accessible.pdf", "fixture_scanned.pdf", "fixture_images.pdf"}

@@ -149,6 +149,20 @@ def test_tester_run_and_report_lifecycle() -> tuple[bool, str]:
             if "AC-01" not in coverage.get("system", {}).get("basis", ""):
                 return False, f"System basis lacks detailed criteria names: {coverage.get('system')}"
 
+            # Spec v2: Verify Model Coverage included for self-testing target
+            model_cov = coverage.get("model")
+            if not model_cov:
+                return False, f"Expected coverage.model for self-testing target, but got: {coverage}"
+            if model_cov.get("covered") != 18 or model_cov.get("total") != 18:
+                return False, f"Expected model coverage 18/18, got: {model_cov}"
+            if "Phase 5 Design Model" not in model_cov.get("basis", ""):
+                return False, f"Expected 'Phase 5 Design Model' in model basis, got: {model_cov.get('basis')}"
+
+            # Spec v2: Verify Model Coverage omitted for external peer target
+            from tests.http_cross_tester import is_self_target
+            if is_self_target("https://api.potentiate.club"):
+                return False, "Expected external peer URL to not be classified as self-target."
+
             # Duplicate run returns 409
             dup_run = await client.post("/tester/test/run", json={"session_id": session_id})
             if dup_run.status_code != 409:

@@ -12,4 +12,5 @@ dependencies = [
     "python-multipart>=0.0.12",
     "uvicorn>=0.32.0",
     "httpx>=0.28.1",
+    "coverage>=7.17.4",
 ]

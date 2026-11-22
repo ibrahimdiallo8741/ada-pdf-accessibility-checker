@@ -6,13 +6,17 @@ import pymupdf
 from pypdf import PdfReader
 from pypdf.errors import PyPdfError
 
+from core.ai_evaluator import evaluate_ai_heuristics
 from core.checks import (
     check_language,
     check_page_images,
     check_page_text,
+    check_pdf_form_fields,
+    check_pdf_outlines,
     check_structure,
     check_title,
 )
+from core.contrast_analyzer import analyze_graphical_contrast, analyze_page_contrast
 from core.models import Finding, ScanResult, ScanSummary
 from core.pdf_struct_parser import parse_structure_tree
 
@@ -96,10 +100,28 @@ def screen_pdf(
             )
             findings.extend(struct_findings)
 
+        # Navigational outlines check (WCAG 2.4.1 Bypass Blocks for multi-page documents)
+        outline_finding = check_pdf_outlines(root_obj, pages_count, finding_id=f"F{finding_counter:03d}")
+        if outline_finding:
+            findings.append(outline_finding)
+            finding_counter += 1
+
+        # Interactive form fields check (WCAG 1.3.1 & 4.1.2)
+        form_findings = check_pdf_form_fields(root_obj, finding_id=f"F{finding_counter:03d}")
+        for ff in form_findings:
+            findings.append(ff)
+            finding_counter += 1
+
         # 4. Per-page text and image checks
+        page_texts: list[tuple[str, str]] = []
         for page_num, page in enumerate(doc_mu.pages(), start=1):
             # Extractable text check
             text = page.get_text()
+            if len(page_texts) < 10:
+                page_texts.append((f"Page {page_num}", text[:500]))
+            elif len(page_texts) < 30 and any(w in text.lower() for w in ("click", "press", "green", "red", "blue", "above", "below")):
+                page_texts.append((f"Page {page_num}", text[:300]))
+
             findings.append(
                 check_page_text(page_num, text, finding_id=f"F{finding_counter:03d}")
             )
@@ -111,6 +133,29 @@ def screen_pdf(
                 check_page_images(page_num, len(images), finding_id=f"F{finding_counter:03d}")
             )
             finding_counter += 1
+
+            # Visual & Contrast Analysis (Milestone 7)
+            contrast_finding = analyze_page_contrast(
+                page, page_num, finding_id=f"F{finding_counter:03d}"
+            )
+            findings.append(contrast_finding)
+            finding_counter += 1
+
+            graphical_finding = analyze_graphical_contrast(
+                page, page_num, finding_id=f"F{finding_counter:03d}"
+            )
+            if graphical_finding:
+                findings.append(graphical_finding)
+                finding_counter += 1
+
+        # 5. Contextual AI Heuristics (Milestone 8)
+        title_val = (metadata.get("title") or "").strip()
+        ai_findings, finding_counter = evaluate_ai_heuristics(
+            title=title_val,
+            content_items=page_texts,
+            start_counter=finding_counter,
+        )
+        findings.extend(ai_findings)
 
     finally:
         doc_mu.close()

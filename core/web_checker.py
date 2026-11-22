@@ -2,13 +2,17 @@ import uuid
 from html.parser import HTMLParser
 from typing import Any
 
+from core.ai_evaluator import evaluate_ai_heuristics
 from core.models import Finding, ScanResult, ScanSummary
 from core.web_checks import (
     check_web_bypass_blocks,
+    check_web_contrast,
     check_web_form_labels,
     check_web_headings,
     check_web_images,
     check_web_language,
+    check_web_lists,
+    check_web_tables,
     check_web_title,
 )
 
@@ -37,9 +41,28 @@ class WebDOMExtractor(HTMLParser):
         self.has_skip_link: bool = False
         self.has_main_landmark: bool = False
 
+        # Tables & Lists (WCAG 1.3.1 Parity)
+        self.tables: list[dict[str, Any]] = []
+        self._current_table: dict[str, Any] | None = None
+        self.lists: list[dict[str, Any]] = []
+        self._list_stack: list[dict[str, Any]] = []
+
+        # Styled Elements (WCAG 1.4.3 Contrast Parity)
+        self.styled_elements: list[dict[str, Any]] = []
+
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attr_dict = {k.lower(): (v or "") for k, v in attrs}
         tag_lower = tag.lower()
+
+        # Capture elements with inline style declarations for contrast analysis
+        style_val = attr_dict.get("style", "").strip()
+        if style_val:
+            s_lower = style_val.lower()
+            if "color" in s_lower or "background" in s_lower:
+                self.styled_elements.append({
+                    "tag": tag_lower,
+                    "style": style_val,
+                })
 
         if tag_lower == "html":
             self.html_lang = attr_dict.get("lang")
@@ -59,6 +82,29 @@ class WebDOMExtractor(HTMLParser):
                 "alt": attr_dict.get("alt", ""),
                 "has_alt": has_alt,
             })
+
+        elif tag_lower == "table":
+            self._current_table = {"has_th": False, "th_count": 0, "td_count": 0, "row_count": 0}
+
+        elif tag_lower == "tr":
+            if self._current_table is not None:
+                self._current_table["row_count"] += 1
+
+        elif tag_lower == "th":
+            if self._current_table is not None:
+                self._current_table["has_th"] = True
+                self._current_table["th_count"] += 1
+
+        elif tag_lower == "td":
+            if self._current_table is not None:
+                self._current_table["td_count"] += 1
+
+        elif tag_lower in ("ul", "ol"):
+            self._list_stack.append({"tag": tag_lower, "li_count": 0})
+
+        elif tag_lower == "li":
+            if self._list_stack:
+                self._list_stack[-1]["li_count"] += 1
 
         elif tag_lower == "label":
             self._in_label = True
@@ -104,6 +150,15 @@ class WebDOMExtractor(HTMLParser):
 
         elif tag_lower == "label":
             self._in_label = False
+
+        elif tag_lower == "table":
+            if self._current_table is not None:
+                self.tables.append(self._current_table)
+                self._current_table = None
+
+        elif tag_lower in ("ul", "ol"):
+            if self._list_stack:
+                self.lists.append(self._list_stack.pop())
 
     def handle_data(self, data: str) -> None:
         if self._in_title:
@@ -184,6 +239,31 @@ def screen_html(
             finding_id=f"W{f_counter:03d}",
         )
     )
+    f_counter += 1
+
+    # 7. Data Tables Check (WCAG 1.3.1 Parity) - evaluated when tables exist
+    if extractor.tables:
+        findings.append(check_web_tables(extractor.tables, finding_id=f"W{f_counter:03d}"))
+        f_counter += 1
+
+    # 8. List Structure Check (WCAG 1.3.1 Parity) - evaluated when lists exist
+    if extractor.lists:
+        findings.append(check_web_lists(extractor.lists, finding_id=f"W{f_counter:03d}"))
+        f_counter += 1
+
+    # 9. Contrast Ratio Check (WCAG 1.4.3 Visual Parity) - evaluated when styled elements exist
+    if extractor.styled_elements:
+        findings.append(check_web_contrast(extractor.styled_elements, finding_id=f"W{f_counter:03d}"))
+        f_counter += 1
+
+    # 10. Contextual AI Heuristics (Milestone 8)
+    html_title = (extractor.title_text or "").strip()
+    ai_findings, f_counter = evaluate_ai_heuristics(
+        title=html_title,
+        content_items=[("HTML <body>", html_content)],
+        start_counter=f_counter,
+    )
+    findings.extend(ai_findings)
 
     summary = ScanSummary(
         checks=len(findings),

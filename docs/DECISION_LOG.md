@@ -75,3 +75,28 @@
   - Sub-100ms execution times per webpage scan with zero new external dependencies.
   - Web GUI updated with dedicated Web URL Screening interface.
   - Dynamic JavaScript Single Page Applications (SPAs) requiring client-side hydration or computed CSS contrast remain deferred to future browser worker microservices (Milestone 6).
+
+---
+
+## ADR-006: Phase 5 Multi-Modal Feature Expansion, Unified Parity, and Spec v2 Alignment
+
+- **Date**: 2026-11-22
+- **Status**: Accepted
+- **Context**: Phase 5 represents the comprehensive feature expansion addressing Milestones 6, 7, and 8 along with the updated course specification (`docs/student-facing-specv2.md`). Critical engineering choices included:
+  1. *Structure Tree Traversal (M6)*: How to parse deep structural hierarchies in tagged PDFs without performance degradation or memory exhaustion on large multi-hundred page documents.
+  2. *Visual & Contrast Analysis (M7)*: How to compute sRGB relative luminance and contrast ratios strictly in-memory without rasterizing full-page bitmaps to disk.
+  3. *Contextual AI Advisory Heuristics (M8)*: How to evaluate qualitative criteria (WCAG 1.3.3 sensory characteristics, 2.4.2 title descriptiveness, 1.4.1 color-only reliance) while maintaining 100% offline resilience and zero dependency on mandatory external paid APIs.
+  4. *Feature Parity (Option 2)*: Ensuring equivalent accessibility screening across both PDF documents and Web URL streams (tables, lists, forms/outlines, and contrast).
+  5. *Testing Compliance (Spec v2)*: Implementing target-aware Model Coverage (`coverage.model`) and real-time code coverage line tracking via `coverage.py`.
+- **Decision**:
+  - *M6 Structure Parser*: Implement recursive `/StructTreeRoot` parser in `core/pdf_struct_parser.py` resolving custom `/RoleMap` aliases, detecting skipped heading levels (`/H1` to `/H6`), table header integrity (`/Table`, `/TR`, `/TH`, `/TD`), list consistency (`/L`, `/LI`, `/Lbl`, `/LBody`), and figure alternative text (`/Figure` `/Alt`).
+  - *M7 Contrast Engine*: Implement in-memory sRGB relative luminance and contrast ratio calculations in `core/contrast_analyzer.py` for PDF text spans, vector background fill drawings, and Web inline CSS styles (`core/web_checks.py::check_web_contrast`).
+  - *M8 Contextual AI Engine*: Implement advisory heuristic engine in `core/ai_evaluator.py` querying Google AI Studio (`gemini-3.5-flash-lite`) via direct REST transport with a 100% resilient local regex heuristic fallback (`_local_heuristic_analyzer`). All AI findings are strictly advisory (`analysis_method="AI"`, `status="Needs Human Review"`).
+  - *Option 2 Unified Parity*: Implement PDF Outlines (`/Outlines`) and interactive AcroForm tooltips (`/TU`) alongside Web Table headers (`<th>`), Web List nesting (`<li>` in `<ol>`/`<ul>`), and Web Inline CSS contrast checking.
+  - *Spec v2 Compliance*: Instrument `POST /system/test/setup` and `GET /system/test/report` with session-scoped `coverage.Coverage` tracing. Conditionally include `coverage.model` (18/18 items) when evaluating self-targets and omit it when cross-testing external peer teams.
+- **Consequences**:
+  - 47/47 automated acceptance and milestone tests pass cleanly.
+  - Scale test on 276-page fixture executes in ~17s while strictly bounding peak RAM below the 150.0 MB memory ceiling (149.7 MB).
+  - 100% zero-disk privacy invariant preserved: all PDF and HTML processing executes strictly in memory buffers (`io.BytesIO`).
+  - Total resilience: the scanner operates seamlessly with or without live API keys or active internet access.
+

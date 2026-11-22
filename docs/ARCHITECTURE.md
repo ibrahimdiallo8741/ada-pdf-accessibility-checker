@@ -14,13 +14,16 @@ ada-pdf-accessibility-checker/
 │   ├── models.py               # Strongly typed dataclasses & JSON serialization
 │   ├── checks.py               # Pure, rule-based PDF screening evaluators
 │   ├── checker.py              # PDF screening coordinator (PyMuPDF + pypdf)
-│   ├── web_checks.py           # Pure, rule-based HTML DOM screening evaluators
+│   ├── pdf_struct_parser.py    # Milestone 6: Deep PDF /StructTreeRoot parser & RoleMap
+│   ├── contrast_analyzer.py    # Milestone 7: Visual & sRGB contrast calculation engine
+│   ├── ai_evaluator.py         # Milestone 8: Contextual AI heuristic advisory engine
+│   ├── web_checks.py           # Pure, rule-based HTML DOM screening evaluators & CSS contrast
 │   ├── web_checker.py          # Webpage screening coordinator (HTMLParser)
 │   └── web_fetcher.py          # In-memory async HTTP fetcher with SSRF protection
 ├── web/                        # Web Application & Delivery Layer
 │   ├── app.py                  # FastAPI server & REST API routes (PDF & Web)
 │   ├── storage.py              # In-memory scan job tracker with TTL expiration
-│   ├── cross_team_routes.py    # Cross-team System & Tester API routes
+│   ├── cross_team_routes.py    # Cross-team System & Tester API routes (Spec v2 compliant)
 │   ├── cross_team_storage.py   # In-memory registry for System & Tester sessions
 │   ├── templates/              # Jinja2 HTML templates
 │   │   └── index.html          # Dual-screening Web UI portal (PDF & Web)
@@ -28,7 +31,8 @@ ada-pdf-accessibility-checker/
 │       ├── style.css           # UI styling & accessibility themes
 │       └── app.js              # Client-side upload, URL scan, polling, & render logic
 ├── tests/                      # Automated Testing Subsystem
-│   ├── runner.py               # Acceptance test runner (AC-01 through AC-18)
+│   ├── runner.py               # Acceptance test runner (47 assertions covering AC & REQ)
+│   ├── test_phase5_milestones.py# Milestone 6, 7, 8 and Parity unit & boundary tests
 │   ├── test_roadmap_sections.py# Edge-case, security, and concurrency test suites
 │   ├── test_cross_team.py      # Cross-team System and Tester ConOps test suite
 │   ├── test_web_scanner.py     # In-memory HTML fixtures and SSRF acceptance tests
@@ -100,6 +104,59 @@ Every screening evaluation yields exactly one of four normalized statuses:
 - **`Issue`**: A concrete accessibility barrier was detected (e.g. page lacks extractable digital text).
 - **`Needs Human Review`**: Heuristic check succeeded partially or detected elements requiring human judgment (e.g. raster images discovered; alt-text appropriateness requires review).
 - **`Could Not Evaluate`**: File corruption, encryption, or parser exception prevented evaluation.
+
+---
+
+## 2.1 Multi-Modal Screening Pipeline (Milestones 6, 7, and 8)
+
+Phase 5 introduced a unified multi-modal screening pipeline coordinating deterministic structural inspection, visual contrast calculations, and contextual AI heuristics across both PDF documents and web HTML DOM streams:
+
+```mermaid
+flowchart TD
+    subgraph Ingestion["Ingestion Layer (web/app.py & pdf_checker.py)"]
+        PDF["In-Memory PDF Bytes (io.BytesIO)"]
+        HTML["In-Memory HTML Stream (httpx)"]
+    end
+
+    subgraph PDFPipeline["PDF Screening Coordinator (core/checker.py)"]
+        BasePDF["Base Checks (Title, Lang, Text, Images)"]
+        M6_Parser["Milestone 6: Structure Parser (core/pdf_struct_parser.py)<br/>• RoleMap & Headings (/H1../H6)<br/>• Tables (/Table /TH /TD) & Lists (/L /LI)<br/>• Figure /Alt vs /Artifact"]
+        M7_Contrast["Milestone 7: Contrast Analyzer (core/contrast_analyzer.py)<br/>• sRGB Text Luminance (4.5:1 / 3:1)<br/>• Vector Drawing Fill Bounding Rects"]
+    end
+
+    subgraph WebPipeline["Web Screening Coordinator (core/web_checker.py)"]
+        BaseWeb["Base Checks (Title, Lang, Headings, Forms, Bypass)"]
+        WebParity["Web Parity Checks (core/web_checks.py)<br/>• Table Header Integrity (&lt;th&gt;)<br/>• List Nesting (&lt;li&gt; in &lt;ol&gt;/&lt;ul&gt;)<br/>• Inline CSS Text Contrast (4.5:1 / 3:1)"]
+    end
+
+    subgraph AI_Engine["Contextual AI Heuristics (core/ai_evaluator.py)"]
+        REST["Google AI Studio REST (gemini-3.5-flash-lite)"]
+        Fallback["100% Resilient Regex Heuristic Analyzer"]
+        REST -.->|Timeout / 402 / Offline| Fallback
+    end
+
+    PDF --> BasePDF & M6_Parser & M7_Contrast
+    HTML --> BaseWeb & WebParity
+    BasePDF & M6_Parser & M7_Contrast --> AI_Engine
+    BaseWeb & WebParity --> AI_Engine
+    AI_Engine --> Findings["Consolidated Finding Records (Pass / Issue / Needs Human Review)"]
+```
+
+1. **Milestone 6: Deep Semantic Structure Traversal (`core/pdf_struct_parser.py`)**:
+   - Parses the document's `/StructTreeRoot` dictionary recursively.
+   - Resolves custom structural tags using `/RoleMap`.
+   - Validates sequential heading hierarchies (`/H1` to `/H6`), identifying skipped levels.
+   - Asserts table row integrity (`/TR`) and header mapping (`/TH` to `/TD`).
+   - Verifies list item encapsulation (`/L`, `/LI`, `/Lbl`, `/LBody`).
+   - Inspects `/Figure` elements for `/Alt` descriptions or `/Artifact` decorative tagging.
+2. **Milestone 7: Visual & Contrast Analysis (`core/contrast_analyzer.py`)**:
+   - In-memory sRGB relative luminance ($L = 0.2126 R + 0.7152 G + 0.0722 B$) and contrast ratio formulas.
+   - Evaluates text spans against background colors established by vector drawing fills (`page.get_drawings()`) or white default page background ($4.5:1$ normal text, $3:1$ large text).
+   - Extends contrast evaluation to Web inline CSS declarations (`core/web_checks.py::check_web_contrast`).
+3. **Milestone 8: Contextual AI Heuristic Assessment (`core/ai_evaluator.py`)**:
+   - Evaluates qualitative criteria: Sensory Characteristics (`1.3.3`), Title Descriptiveness (`2.4.2`/`2.4.6`), and Color-Only Reliance (`1.4.1`).
+   - Direct HTTP client calls to Google AI Studio (`gemini-3.5-flash-lite`) via `httpx` with zero heavy SDK dependencies.
+   - 100% resilient offline fallback (`_local_heuristic_analyzer`) guarantees uninterrupted operation with advisory human review findings (`analysis_method="AI"`, `status="Needs Human Review"`).
 
 ---
 

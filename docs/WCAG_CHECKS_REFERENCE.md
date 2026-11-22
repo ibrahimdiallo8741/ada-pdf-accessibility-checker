@@ -83,6 +83,106 @@
 
 ---
 
+## 2.1 Milestone 6: Deep Semantic Structure Tree Checks (`core/pdf_struct_parser.py`)
+
+### Check 6: Heading Hierarchy Nesting
+- **WCAG Success Criterion**: [WCAG 1.3.1 Info and Relationships (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html) & [2.4.6 Headings and Labels (Level AA)](https://www.w3.org/WAI/WCAG21/Understanding/headings-and-labels.html)
+- **PDF Technique**: [PDF9: Providing headings by marking content with heading tags in PDF documents](https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF9)
+- **Implementation**: Recursively inspects `/StructTreeRoot` `/K` elements; resolves custom tags via `/RoleMap`. Evaluates sequence of `/H1` through `/H6`.
+- **Status Classification**:
+  - `Pass`: All heading tags are sequential without skipping levels.
+  - `Issue`: Non-sequential heading hierarchy detected (e.g. `<H1>` immediately followed by `<H3>`).
+
+### Check 7: Data Table Structural Integrity
+- **WCAG Success Criterion**: [WCAG 1.3.1 Info and Relationships (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html)
+- **PDF Technique**: [PDF6: Using table elements for table markup in PDF documents](https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF6)
+- **Implementation**: Inspects `/Table` structural elements for rows (`/TR`) containing header cells (`/TH`) and data cells (`/TD`).
+- **Status Classification**:
+  - `Pass`: Table contains row elements with associated header cell (`/TH`) definitions.
+  - `Issue`: Table lacks header cells (`/TH`) or data cells are declared without associated headers.
+
+### Check 8: List Structural Consistency
+- **WCAG Success Criterion**: [WCAG 1.3.1 Info and Relationships (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html)
+- **PDF Technique**: [PDF21: Using List tags for lists in PDF documents](https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF21)
+- **Implementation**: Inspects `/L` (List) structural elements and child `/LI` item containers.
+- **Status Classification**:
+  - `Pass`: List items are properly encapsulated in `/LI` with label (`/Lbl`) and body (`/LBody`) tags.
+  - `Issue`: List contains non-`/LI` children or `/LI` elements lack label/body structure.
+
+### Check 9: Figure Alternative Text Quality
+- **WCAG Success Criterion**: [WCAG 1.1.1 Non-text Content (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html)
+- **PDF Technique**: [PDF1: Applying text alternatives to images with the Alt entry in PDF documents](https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1)
+- **Implementation**: Inspects `/Figure` structural elements for `/Alt` entries or `/Artifact` classification.
+- **Status Classification**:
+  - `Pass`: Figure element has descriptive `/Alt` text or is marked as decorative `/Artifact`.
+  - `Issue`: Figure element lacks alternative text `/Alt` entry.
+  - `Needs Human Review`: Contextual quality and accuracy of the alternative description requires human verification.
+
+---
+
+## 2.2 Milestone 7: Visual & Contrast Analysis (`core/contrast_analyzer.py`)
+
+### Check 10: Text-to-Background Contrast Ratio
+- **WCAG Success Criterion**: [WCAG 1.4.3 Contrast (Minimum) (Level AA)](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)
+- **Implementation**: Extracts text span font sizes, flags, and sRGB integer colors via PyMuPDF; inspects underlying vector drawings (`page.get_drawings()`) to establish enclosing background fill colors.
+- **Formula**: Relative luminance $L = 0.2126 R + 0.7152 G + 0.0722 B$ (linearized sRGB); Contrast Ratio $\text{CR} = (L_1 + 0.05) / (L_2 + 0.05)$.
+- **Status Classification**:
+  - `Pass`: All evaluated text spans satisfy WCAG AA contrast ($\ge 4.5:1$ for normal text, $\ge 3.0:1$ for large text).
+  - `Issue`: One or more text spans fail minimum contrast ratio requirements.
+
+### Check 11: Web Inline CSS Text Contrast Parity
+- **WCAG Success Criterion**: [WCAG 1.4.3 Contrast (Minimum) (Level AA)](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)
+- **Implementation**: Inspects elements with inline `style` attributes (`color` and `background-color`/`background`). Evaluates contrast ratio using the shared relative luminance engine (`core/web_checks.py::check_web_contrast`).
+- **Status Classification**:
+  - `Pass`: Inline styled elements satisfy WCAG AA contrast ($\ge 4.5:1$ normal, $\ge 3.0:1$ large).
+  - `Issue`: Low contrast detected on inline styled elements.
+  - `Needs Human Review`: No inline color styles detected; visual contrast depends on external stylesheets.
+
+---
+
+## 2.3 Milestone 8: Contextual AI Advisory Heuristics (`core/ai_evaluator.py`)
+
+### Check 12: Sensory Characteristics (AI Advisory)
+- **WCAG Success Criterion**: [WCAG 1.3.3 Sensory Characteristics (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/sensory-characteristics.html)
+- **Implementation**: Contextual analysis of instructions relying on shape, size, or spatial orientation (e.g. "click the green button on the right", "see diagram below").
+- **Status**: Always `Needs Human Review` (`analysis_method="AI"`). Never automated fail or pass.
+
+### Check 13: Document Title Descriptiveness (AI Advisory)
+- **WCAG Success Criterion**: [WCAG 2.4.2 Page Titled (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/page-titled.html) & [2.4.6 Headings and Labels (Level AA)](https://www.w3.org/WAI/WCAG21/Understanding/headings-and-labels.html)
+- **Implementation**: Evaluates whether document title is generic, uninformative, or default software placeholders (e.g. `"Untitled Document"`, `"Scan001"`, `"Report"`, `"Draft"`).
+- **Status**: `Needs Human Review` with actionable title guidance.
+
+### Check 14: Color-Only Information Reliance (AI Advisory)
+- **WCAG Success Criterion**: [WCAG 1.4.1 Use of Color (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/use-of-color.html)
+- **Implementation**: Detects instructions or states communicated solely through color without secondary text or visual indicators (e.g. "required fields are in red").
+- **Status**: `Needs Human Review` with multi-modal remediation guidance.
+
+---
+
+## 2.4 Feature Parity Checks (PDF & Web)
+
+### Check 15: PDF Navigation Outlines (`check_pdf_outlines`)
+- **WCAG Success Criterion**: [WCAG 2.4.1 Bypass Blocks (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/bypass-blocks.html)
+- **Implementation**: For multi-page PDFs ($> 3$ pages), verifies presence of `/Outlines` dictionary in document catalog.
+- **Status**: `Pass` if bookmarks exist; `Needs Human Review` if multi-page document lacks outlines.
+
+### Check 16: Interactive Form Field Tooltips (`check_pdf_form_fields`)
+- **WCAG Success Criterion**: [WCAG 1.3.1 Info and Relationships (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html) & [4.1.2 Name, Role, Value (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html)
+- **Implementation**: Inspects `/AcroForm` `/Fields` array to verify interactive form fields provide user-facing tooltip descriptions via `/TU`.
+- **Status**: `Pass` if all fields have `/TU`; `Issue` if fields lack `/TU` descriptions.
+
+### Check 17: Web Data Table Header Markup (`check_web_tables`)
+- **WCAG Success Criterion**: [WCAG 1.3.1 Info and Relationships (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html)
+- **Implementation**: Inspects `<table>` elements in HTML DOM to verify `<th>` header cell elements are present.
+- **Status**: `Pass` if headers are declared; `Issue` if table composed solely of `<td>` data cells.
+
+### Check 18: Web List Structural Consistency (`check_web_lists`)
+- **WCAG Success Criterion**: [WCAG 1.3.1 Info and Relationships (Level A)](https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html)
+- **Implementation**: Verifies `<ol>` and `<ul>` list containers encapsulate items within `<li>` elements.
+- **Status**: `Pass` if valid; `Issue` if list container is empty or malformed.
+
+---
+
 ## 3. Remediation Guidance Catalog
 
 | Rule ID | Finding Status | Condition | Standard Remediation Text |
@@ -92,6 +192,16 @@
 | `STRUCT_001` | `Issue` | Structure tree missing | Enable PDF tagging in your export settings (e.g., 'Save as Tagged PDF' in Microsoft Word or InDesign) or use Adobe Acrobat Autotag tool. |
 | `TEXT_001` | `Issue` | Page lacks digital text layer | Run Optical Character Recognition (OCR) on this scanned page to generate a selectable text layer for assistive technology. |
 | `IMG_001` | `Needs Human Review` | Image resources discovered | Review images on this page to ensure meaningful images have descriptive alternative text (/Alt) and decorative images are marked as artifacts. |
+| `HEAD_001` | `Issue` | Skipped heading hierarchy level | Nest heading tags sequentially without skipping levels (e.g. nest &lt;H2&gt; before &lt;H3&gt;). |
+| `TABLE_001` | `Issue` | Table missing header cells | Structure tables with row/column header cells (&lt;TH&gt; or &lt;th&gt;) to programmatically associate headers with data. |
+| `LIST_001` | `Issue` | Broken list item nesting | Ensure list containers properly encapsulate items inside &lt;LI&gt; or &lt;li&gt; elements. |
+| `FIG_001` | `Issue` / `Review` | Figure lacks alternative text | Provide concise, descriptive alternative text (/Alt) for informative figures or mark decorative graphics as /Artifact. |
+| `CONTRAST_001`| `Issue` | Text contrast below WCAG AA ratio | Increase contrast between text and background colors to achieve at least 4.5:1 for standard text and 3:1 for large text. |
+| `OUTLINE_001` | `Needs Human Review` | Multi-page doc lacks outlines | Provide a navigational bookmark outline tree in multi-page documents to facilitate screen reader navigation. |
+| `FORM_001` | `Issue` | Form field lacks tooltip/label | Add a user-friendly descriptive tooltip (/TU or &lt;label&gt;) describing the expected input for each form control. |
+| `AI_SENSORY` | `Needs Human Review` | Instructions rely on sensory cues | Provide secondary textual identifiers (e.g. labeled button names or section titles) alongside visual or positional cues. |
+| `AI_TITLE` | `Needs Human Review` | Generic or uninformative title | Provide a descriptive, informative document title that clearly identifies the document's subject or purpose. |
+| `AI_COLOR` | `Needs Human Review` | Information conveyed by color alone | Ensure information conveyed by color is also available through text, symbols, or additional formatting. |
 | `*` | `Could Not Evaluate` | Parsing exception / encryption | Ensure the PDF file is unencrypted, valid, and not password protected, then retry screening. |
 
 ---

@@ -8,9 +8,9 @@
 
 | Status Category | Count | Definition |
 |---|:---:|---|
-| **Implemented** | 5 | Fully operational rule-based checks in the current screening engine ([`core/checks.py`](../core/checks.py)). |
-| **Planned (Deterministic)** | 15 | Programmatic and structural heuristics assigned to active or upcoming milestones (Milestones 5–7). |
-| **AI-Assisted Candidate** | 7 | Heuristics that cannot be settled deterministically, designated for cloud AI/vision model heuristic evaluation (Milestone 8 & beyond). |
+| **Implemented** | 12 | Fully operational rule-based & AI heuristic checks across PDF and Web screening engines. |
+| **Planned (Deterministic)** | 10 | Programmatic and structural heuristics assigned to future production roadmap milestones. |
+| **AI-Assisted Candidate** | 5 | Complex multimodal heuristics designated for future cloud AI / computer vision models. |
 | **Unassigned in Scope** | 5 | Deterministic checks within project domain (PDF or web documents), not yet assigned to an active milestone. |
 | **Explicitly Out of Scope** | 8 | Strictly out of scope: requires live transactional backends, full site-wide multi-page architectures, or format-incompatible rendering engines. |
 | **Not Applicable** | 10 | Media formats (prerecorded audio/video, live broadcasts, hardware motion sensors) absent from static PDFs or target pages. |

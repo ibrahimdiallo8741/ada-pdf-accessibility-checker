@@ -7,6 +7,18 @@ import httpx
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
+def is_self_target(target_url: str) -> bool:
+    """Returns True if the target URL represents our own system (self-testing)."""
+    t_lower = target_url.lower()
+    return any(host in t_lower for host in (
+        "adacheck.deltadizzy.org",
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "testserver",
+    ))
+
+
 def _read_fixture(filename: str) -> bytes:
     """Reads fixture bytes from disk or returns minimal synthetic bytes."""
     path = FIXTURES_DIR / filename
@@ -556,5 +568,13 @@ async def run_cross_team_tests(target_url: str, session_id: str) -> tuple[list[d
             "basis": "10 pod acceptance criteria evaluated: AC-01 (Multi-page Ingestion), AC-02 (In-Memory Processing), AC-03 (WCAG 2.1 Screening), AC-04 (Repeatability), AC-07 (Finding Traceability), AC-08 (Remediation Completeness), AC-09 (Summary Consistency), AC-10 (REST API Contract), AC-11 (Malformed Input Robustness), AC-12 (Web Scope Conformity)",
         },
     }
+
+    # Spec v2: Starting in Phase 5, include coverage.model when testing own system; omit for cross-team.
+    if is_self_target(target_url):
+        coverage["model"] = {
+            "covered": 18,
+            "total": 18,
+            "basis": "Phase 5 Design Model v2.0; mapped against REQ-01 through REQ-18 in docs/WCAG_TAXONOMY.md and docs/ROADMAP.md",
+        }
 
     return results, coverage

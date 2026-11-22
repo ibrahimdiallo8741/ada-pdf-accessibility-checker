@@ -5,8 +5,16 @@ from fastapi import APIRouter, Query, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from tests.http_cross_tester import run_cross_team_tests
+from tests.http_cross_tester import is_self_target, run_cross_team_tests
 from web.cross_team_storage import cross_store
+
+try:
+    import coverage
+    _HAS_COVERAGE = True
+except ImportError:
+    _HAS_COVERAGE = False
+
+_system_coverage_instances: dict[str, Any] = {}
 
 system_router = APIRouter(tags=["Cross-Team System Interface"])
 tester_router = APIRouter(tags=["Cross-Team Tester Interface"])
@@ -15,16 +23,25 @@ tester_router = APIRouter(tags=["Cross-Team Tester Interface"])
 # --- Schemas ---
 
 class SystemSetupRequest(BaseModel):
-    session_id: str = Field(..., description="Unique session identifier for the test run")
+    session_id: str = Field(..., min_length=1, description="Unique session identifier for the test run")
     setup: dict[str, Any] = Field(default_factory=dict, description="Initial setup parameters")
 
 
 class TesterSetupRequest(BaseModel):
-    target_url: str = Field(..., description="Base URL of the target system under test")
+    target_url: str = Field(
+        ...,
+        min_length=1,
+        json_schema_extra={"format": "uri"},
+        description="Base URL of the target system under test",
+    )
 
 
 class TesterRunRequest(BaseModel):
-    session_id: str = Field(..., description="Unique session identifier generated during tester setup")
+    session_id: str = Field(
+        ...,
+        min_length=1,
+        description="Unique session identifier generated during tester setup",
+    )
 
 
 # --- System Role Endpoints ---
@@ -34,6 +51,17 @@ async def system_setup(req: SystemSetupRequest):
     """Initializes session resources on the target system (docs/student-facing-spec.md)."""
     try:
         cross_store.register_system_session(req.session_id, req.setup)
+        if _HAS_COVERAGE:
+            try:
+                # Session-scoped coverage tracer measuring core/ and web/ modules
+                cov = coverage.Coverage(
+                    source=["core", "web"],
+                    omit=["tests/*", "web/cross_team_*"],
+                )
+                cov.start()
+                _system_coverage_instances[req.session_id] = cov
+            except Exception:
+                pass
         return JSONResponse(
             status_code=201,
             content={"session_id": req.session_id},
@@ -51,7 +79,7 @@ async def system_setup(req: SystemSetupRequest):
 
 
 @system_router.get("/test/report")
-async def system_report(session_id: str = Query(..., description="Session identifier")):
+async def system_report(session_id: str = Query(..., min_length=1, description="Session identifier")):
     """Returns code coverage collected for the specified test session."""
     session = cross_store.get_system_session(session_id)
     if not session:
@@ -60,13 +88,37 @@ async def system_report(session_id: str = Query(..., description="Session identi
             content={"message": f"Session '{session_id}' not found.", "source": "system"},
         )
 
+    code_covered = None
+    code_total = None
+    code_basis = "Source lines; target instrumentation unavailable"
+
+    cov = _system_coverage_instances.pop(session_id, None)
+    if cov is not None:
+        try:
+            cov.stop()
+            cov.save()
+            data = cov.get_data()
+            files = data.measured_files()
+            total_stmts = 0
+            covered_stmts = 0
+            for f in files:
+                analysis = cov._analyze(f)
+                total_stmts += len(analysis.statements)
+                covered_stmts += len(analysis.executed)
+            if total_stmts > 0:
+                code_covered = covered_stmts
+                code_total = total_stmts
+                code_basis = f"Source lines executed in core/ and web/ during test session ({covered_stmts}/{total_stmts} statements)"
+        except Exception as e:
+            code_basis = f"Source lines; live coverage calculation error: {e}"
+
     return {
         "session_id": session_id,
         "coverage": {
             "code": {
-                "covered": None,
-                "total": None,
-                "basis": "Source lines; target instrumentation unavailable",
+                "covered": code_covered,
+                "total": code_total,
+                "basis": code_basis,
             },
         },
     }
@@ -171,6 +223,12 @@ async def tester_run(req: TesterRunRequest):
             "component": {"covered": 0, "total": 4, "basis": "4 core screening components (Metadata, Structure, Text, Images); suite aborted before execution"},
             "system": {"covered": 0, "total": 10, "basis": "10 pod acceptance criteria (AC-01..AC-04, AC-07..AC-12); suite aborted before execution"},
         }
+        if is_self_target(session.target_url):
+            fallback_cov["model"] = {
+                "covered": 0,
+                "total": 18,
+                "basis": "Phase 5 Design Model v2.0; mapped against REQ-01 through REQ-18 in docs/WCAG_TAXONOMY.md and docs/ROADMAP.md",
+            }
         cross_store.abort_tester_session(req.session_id, abort_results, fallback_cov, str(exc))
         return JSONResponse(
             status_code=500,
@@ -179,7 +237,7 @@ async def tester_run(req: TesterRunRequest):
 
 
 @tester_router.get("/test/report")
-async def tester_report(session_id: str = Query(..., description="Session identifier")):
+async def tester_report(session_id: str = Query(..., min_length=1, description="Session identifier")):
     """Retrieves stored suite report after run completion or abort."""
     session = cross_store.get_tester_session(session_id)
     if not session:

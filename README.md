@@ -74,7 +74,7 @@ python pdf_checker.py
 
 ## Running Tests
 
-Execute the automated test runner against all Acceptance Criteria:
+Execute the automated test runner against all Acceptance Criteria and Milestones (47/47 passing):
 ```bash
 # With uv:
 uv run python -m tests.runner
@@ -93,11 +93,12 @@ uv run python -m tests.runner path/to/custom_pdfs/
 ## Documentation
 
 Consolidated architectural, technical, and compliance specifications in [`docs/`](docs/):
-- [`ARCHITECTURE.md`](docs/ARCHITECTURE.md): System design, component structure, data models, REST API, privacy invariants, and Cloud Run + Cloudflare topology.
-- [`WCAG_CHECKS_REFERENCE.md`](docs/WCAG_CHECKS_REFERENCE.md): Technical check definitions, WCAG 2.1 AA citations, boundaries, status enums, and remediation guidance catalog.
+- [`ARCHITECTURE.md`](docs/ARCHITECTURE.md): System design, component structure, multi-modal screening pipeline (M6–M8), data models, REST API, privacy invariants, and Cloud Run + Cloudflare topology.
+- [`WCAG_CHECKS_REFERENCE.md`](docs/WCAG_CHECKS_REFERENCE.md): Technical check definitions, WCAG 2.1 AA citations, boundaries, status enums, and remediation guidance catalog for all PDF and Web checks.
 - [`WCAG_TAXONOMY.md`](docs/WCAG_TAXONOMY.md): Complete coverage taxonomy of all 50 WCAG 2.1 Level A & AA criteria (implemented, planned, out-of-scope, N/A).
-- [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–005) detailing scope, parser engine, hosting, tooling, and web URL screening choices.
-- [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–5 completed) and planned post-prototype enhancements.
+- [`DECISION_LOG.md`](docs/DECISION_LOG.md): Architectural Decision Records (ADRs 001–006) detailing scope, parser engines, hosting, tooling, web URL screening, and Phase 5 multi-modal expansion.
+- [`ROADMAP.md`](docs/ROADMAP.md): Project milestone completion record (Milestones 1–8 and Option 2 Parity completed) and Phase 5 Design Requirements Traceability Matrix (`coverage.model`).
+- [`SPEC_V2_DIFF_ANALYSIS.md`](docs/SPEC_V2_DIFF_ANALYSIS.md): Course Spec v1 vs v2 diff analysis, Model Coverage (`coverage.model`), and live code instrumentation.
 - [`INTRA_POD_SPECIFICATION.md`](docs/INTRA_POD_SPECIFICATION.md): Intra-pod system specification, models, interfaces, preparation/cleanup ConOps, and limitations.
 - [`CROSS_TEAM_TESTING_PLAN.md`](docs/CROSS_TEAM_TESTING_PLAN.md): Step-by-step API test execution plan for self-testing and cross-testing under the shared testing ConOps.
 - [`CODE_COVERAGE_OPTIONS.md`](docs/CODE_COVERAGE_OPTIONS.md): Evaluation of real-time code coverage instrumentation options for the System test role.

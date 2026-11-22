@@ -131,3 +131,106 @@ def check_page_images(page_number: int, image_count: int, finding_id: str) -> Fi
         remediation_guidance=None,
         additional_details="No image XObjects detected.",
     )
+
+
+def check_pdf_outlines(root_object: Any, page_count: int, finding_id: str = "F004") -> Finding | None:
+    """WCAG 2.4.1 Bypass Blocks (Level A): For multi-page PDFs (> 3 pages), checks for /Outlines bookmark tree."""
+    if page_count <= 3:
+        return None
+
+    has_outlines = False
+    try:
+        if root_object and "/Outlines" in root_object:
+            outlines_obj = root_object["/Outlines"]
+            if hasattr(outlines_obj, "get_object"):
+                outlines_obj = outlines_obj.get_object()
+            if outlines_obj and ("/First" in outlines_obj or "/Count" in outlines_obj):
+                has_outlines = True
+    except Exception:
+        has_outlines = False
+
+    if has_outlines:
+        return Finding(
+            finding_id=finding_id,
+            input_location="Document Catalog /Outlines",
+            issue_description=f"Document contains navigational bookmark outlines ({page_count} pages).",
+            WCAG_criterion="2.4.1 Bypass Blocks (Level A)",
+            analysis_method="Deterministic",
+            status="Pass",
+            remediation_guidance=None,
+            additional_details="Bookmark tree allows users to bypass repeated blocks and jump to sections.",
+        )
+
+    return Finding(
+        finding_id=finding_id,
+        input_location="Document Catalog /Outlines",
+        issue_description=f"Multi-page document ({page_count} pages) lacks navigational bookmark outlines (/Outlines).",
+        WCAG_criterion="2.4.1 Bypass Blocks (Level A)",
+        analysis_method="Deterministic",
+        status="Needs Human Review",
+        remediation_guidance="Add bookmark outlines to multi-page documents so users can navigate directly to sections.",
+        additional_details="Screen reader and keyboard users cannot easily bypass preceding pages without bookmarks.",
+    )
+
+
+def check_pdf_form_fields(root_object: Any, finding_id: str = "F005") -> list[Finding]:
+    """WCAG 1.3.1 & 4.1.2: Evaluates accessible descriptions (/TU) on interactive form fields."""
+    findings: list[Finding] = []
+    if not root_object or "/AcroForm" not in root_object:
+        return findings
+
+    try:
+        acro = root_object["/AcroForm"]
+        if hasattr(acro, "get_object"):
+            acro = acro.get_object()
+        if not acro or "/Fields" not in acro:
+            return findings
+
+        fields = acro["/Fields"]
+        if hasattr(fields, "get_object"):
+            fields = fields.get_object()
+        if not isinstance(fields, list) or not fields:
+            return findings
+
+        unlabeled = 0
+        total = 0
+        for f in fields:
+            if hasattr(f, "get_object"):
+                f = f.get_object()
+            if not f or not hasattr(f, "get"):
+                continue
+            total += 1
+            tu = f.get("/TU")
+            if not tu or not str(tu).strip():
+                unlabeled += 1
+
+        if total == 0:
+            return findings
+
+        if unlabeled > 0:
+            findings.append(Finding(
+                finding_id=finding_id,
+                input_location="Document Catalog /AcroForm",
+                issue_description=f"{unlabeled} of {total} interactive form field(s) lack accessible descriptions (/TU attribute).",
+                WCAG_criterion="1.3.1 Info and Relationships (Level A)",
+                analysis_method="Deterministic",
+                status="Issue",
+                remediation_guidance="Provide a descriptive tooltip (/TU attribute) for all interactive form fields to serve as an accessible name.",
+                additional_details="Assistive technologies read /TU as the field label for interactive inputs.",
+            ))
+        else:
+            findings.append(Finding(
+                finding_id=finding_id,
+                input_location="Document Catalog /AcroForm",
+                issue_description=f"All {total} interactive form field(s) have accessible descriptions (/TU).",
+                WCAG_criterion="1.3.1 Info and Relationships (Level A)",
+                analysis_method="Deterministic",
+                status="Pass",
+                remediation_guidance=None,
+                additional_details=f"{total} form field(s) verified with /TU attributes.",
+            ))
+    except Exception:
+        pass
+
+    return findings
+

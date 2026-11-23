@@ -94,7 +94,7 @@ uv run python -m tests.runner path/to/custom_pdfs/
 
 The repository includes an automated GitHub Actions pipeline ([`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)):
 - **Continuous Integration (CI):** Runs on every push and PR to `main`. Validates Python 3.13 environment with `uv`, executes all 47 acceptance tests (`uv run python -m tests.runner`), validates CLI execution, checks FastAPI app startup, and tests Docker container image build.
-- **Continuous Deployment (CD):** On merge or push to `main`, automatically deploys the container to Google Cloud Run (`ada-compliance-checker` in `us-central1`) using the `GCP_SA_KEY` GitHub secret.
+- **Continuous Deployment (CD):** On merge or push to `main`, automatically deploys the container to Google Cloud Run (`ada-compliance-checker` in `us-central1`) using keyless Workload Identity Federation (OIDC).
 
 ---
 

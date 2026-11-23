@@ -246,5 +246,5 @@ flowchart LR
 
 ### 2. CD Workflow (Main Branch Releases)
 - **Target**: Google Cloud Run (`ada-compliance-checker` in `us-central1`).
-- **Authentication**: Authenticates using GitHub Secret `GCP_SA_KEY` via `google-github-actions/auth`.
+- **Authentication**: Keyless OpenID Connect (OIDC) authentication using Google Cloud Workload Identity Federation (`github-pool` / `github-provider`) impersonating `github-actions-ci-cd-deployer`. No static JSON keys stored in secrets.
 - **Deployment**: Deploys source container via `google-github-actions/deploy-cloudrun` with zero downtime.

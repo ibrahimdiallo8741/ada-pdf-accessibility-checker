@@ -7,6 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   test:
     name: Run Automated Tests & Container Build
@@ -48,10 +52,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud (Keyless OIDC)
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: 'projects/295390844193/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-ci-cd-deployer@ada-compliance-checker-511904.iam.gserviceaccount.com'
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
